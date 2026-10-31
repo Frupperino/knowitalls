@@ -369,7 +369,9 @@ const LETTERS = ['A','B','C','D'];
 function hash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36)}
 const BANK = RAW.trim().split('\n').map(l=>{const [cat,q,a,...w]=l.split('|');return {id:'b'+hash(q),cat,q,a,w}});
 
-const S = {db:null, me:null, players:{}, live:null, pts:[], pmap:{}, custom:[], used:[], tab:'play',
+// pts = råa dokument i points (svar i pågående runda + bonus), rounds = sammanslagna rundor,
+// all = båda i samma form {player, pts, right, day, roundId, kind}, det som topplistan räknar på
+const S = {db:null, me:null, players:{}, live:null, pts:[], pmap:{}, rounds:{}, all:[], custom:[], used:[], tab:'play',
   setup:{cat:'X',n:10,dur:20}, emoji:EMOJI[0], seenKey:null, seenAt:0, timeoutKey:null, revealSent:null,
   confirm:null, loaded:{}, stale:false, readonly:false, noDb:false};
 
@@ -405,7 +407,7 @@ const cLabel = (key,label,sure) => S.confirm===key ? (sure||'Tryck igen') : labe
 // ---------- vyer ----------
 function standings(filter){
   const tot={};for(const id in S.players)tot[id]=0;
-  for(const p of S.pts){if(filter&&!filter(p))continue;if(p.player in tot)tot[p.player]+=p.pts||0}
+  for(const p of S.all){if(filter&&!filter(p))continue;if(p.player in tot)tot[p.player]+=p.pts||0}
   return Object.entries(tot).sort((a,b)=>b[1]-a[1]);
 }
 function lbRows(list,sub){
@@ -493,7 +495,7 @@ function viewReveal(){
 function viewFinal(){
   const L=S.live,list=standings(p=>p.roundId===L.roundId),tonight=dayKey(Date.now());
   return `<section class="card"><h2>Rundan är klar</h2><p class="hint">${esc(CATS[L.cat]||'')} · ${L.qs.length} frågor</p>
-    ${lbRows(list,id=>{const n=S.pts.filter(p=>p.roundId===L.roundId&&p.player===id&&p.correct).length;return n+' rätt'})}</section>
+    ${lbRows(list,id=>{const n=S.all.filter(p=>p.roundId===L.roundId&&p.player===id).reduce((s,p)=>s+(p.right||0),0);return n+' rätt'})}</section>
   <section class="card"><h2>Ikväll totalt</h2>${lbRows(standings(p=>p.day===tonight).slice(0,6))}</section>
   ${hostBar('<button class="primary" data-act="lobby">Tillbaka till start</button>')}`;
 }
@@ -510,14 +512,14 @@ function viewPlay(){
 }
 
 function viewBoard(){
-  const days=[...new Set(S.pts.map(p=>p.day))].sort();
+  const days=[...new Set(S.all.map(p=>p.day))].sort();
   const week=standings();
   const tbl=days.length?`<div class="tbl"><table><thead><tr><th>Spelare</th>${days.map(d=>`<th>${esc(dayLabel(d))}</th>`).join('')}<th>Totalt</th></tr></thead><tbody>
-    ${week.map(([id,sc])=>`<tr><td>${pemo(id)} ${esc(pname(id))}</td>${days.map(d=>`<td>${S.pts.filter(p=>p.player===id&&p.day===d).reduce((s,p)=>s+(p.pts||0),0)}</td>`).join('')}<td><b>${sc}</b></td></tr>`).join('')}
+    ${week.map(([id,sc])=>`<tr><td>${pemo(id)} ${esc(pname(id))}</td>${days.map(d=>`<td>${S.all.filter(p=>p.player===id&&p.day===d).reduce((s,p)=>s+(p.pts||0),0)}</td>`).join('')}<td><b>${sc}</b></td></tr>`).join('')}
     </tbody></table></div>`:'<p class="hint">Poängen per kväll dyker upp här efter första rundan.</p>';
   const bonus=S.pts.filter(p=>p.kind==='bonus').sort((a,b)=>b.at-a.at).slice(0,12);
   const ids=Object.keys(S.players);
-  return `<section class="card"><h2>Hela veckan</h2>${lbRows(week,id=>{const r=S.pts.filter(p=>p.player===id&&p.correct).length;return r+' rätta svar'})}</section>
+  return `<section class="card"><h2>Hela veckan</h2>${lbRows(week,id=>{const r=S.all.filter(p=>p.player===id).reduce((s,p)=>s+(p.right||0),0);return r+' rätta svar'})}</section>
   <section class="card"><h2>Per kväll</h2>${tbl}</section>
   <section class="card"><h2>Ge poäng</h2><p class="hint">För allt annat ni tävlar i: kortspel, pulkarace, bästa fikat. Minuspoäng går också.</p>
     <select id="bp">${ids.map(id=>`<option value="${id}">${pemo(id)} ${esc(pname(id))}</option>`).join('')}</select>
@@ -555,7 +557,7 @@ function render(){
   document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===S.tab?'page':'false'));
   const mc=$('#mechip');
   if(S.me&&S.players[S.me]){mc.hidden=false;mc.innerHTML=`<span>${pemo(S.me)}</span><span>${esc(pname(S.me))}</span>`}else mc.hidden=true;
-  const days=[...new Set([...S.pts.map(p=>p.day),dayKey(Date.now())])].sort();
+  const days=[...new Set([...S.all.map(p=>p.day),dayKey(Date.now())])].sort();
   $('#kvall').textContent='Kväll '+(days.indexOf(dayKey(Date.now()))+1)+' · '+dayLabel(dayKey(Date.now()));
   const net=$('#net');
   if(S.readonly){net.hidden=false;net.textContent='Databasen tar inte emot ändringar just nu. Säg till den som satte upp spelet.'}
@@ -579,8 +581,32 @@ async function startRound(){
   let pick=shuffle(pool.filter(q=>!used.has(q.id))).slice(0,n);
   if(pick.length<n)pick=pick.concat(shuffle(pool.filter(q=>used.has(q.id))).slice(0,n-pick.length));
   const qs=pick.map(q=>{const o=shuffle([q.a,...q.w]);return {id:q.id,cat:q.cat,q:q.q,o,c:o.indexOf(q.a)}});
-  const ok=await write(()=>S.db.doc('game/live').set({status:'question',roundId:'r'+Date.now().toString(36),cat,qs,idx:0,qStart:Date.now(),dur,host:S.me,day:dayKey(Date.now())}));
-  if(ok)await write(()=>S.db.doc('game/used').set({ids:[...new Set([...S.used,...pick.map(q=>q.id)])]}));
+  const batch=S.db.batch();
+  // Slå ihop svar som blivit kvar från rundor som aldrig avslutades
+  for(const rid of new Set(S.pts.filter(p=>p.kind==='quiz').map(p=>p.roundId)))addRoundSummary(batch,rid);
+  batch.set(S.db.doc('game/live'),{status:'question',roundId:'r'+Date.now().toString(36),cat,qs,idx:0,qStart:Date.now(),dur,host:S.me,day:dayKey(Date.now())});
+  batch.set(S.db.doc('game/used'),{ids:[...new Set([...S.used,...pick.map(q=>q.id)])]});
+  await write(()=>batch.commit());
+}
+
+// Ett dokument per runda i stället för ett per svar, så att varje telefon läser lite när appen öppnas
+function addRoundSummary(batch,roundId){
+  const raw=S.pts.filter(p=>p.kind==='quiz'&&p.roundId===roundId);if(!raw.length)return;
+  const prev=S.rounds[roundId],scores=JSON.parse(JSON.stringify(prev?.scores||{}));
+  for(const p of raw){const s=scores[p.player]||(scores[p.player]={pts:0,right:0});s.pts+=p.pts||0;if(p.correct)s.right++}
+  const cat=prev?.cat||(S.live?.roundId===roundId?S.live.cat:'');
+  batch.set(S.db.doc('game/'+roundId),{type:'round',day:prev?.day||raw[0].day,at:prev?.at||Date.now(),cat,scores});
+  raw.forEach(p=>batch.delete(S.db.doc('points/'+p._id)));
+}
+function endRound(status){
+  const batch=S.db.batch();addRoundSummary(batch,S.live.roundId);
+  batch.update(S.db.doc('game/live'),{status});
+  return write(()=>batch.commit());
+}
+function rebuild(){
+  S.all=S.pts.filter(p=>!(p.kind==='quiz'&&S.rounds[p.roundId]))
+    .map(p=>({player:p.player,pts:p.pts||0,right:p.correct?1:0,day:p.day,roundId:p.roundId,kind:p.kind}))
+    .concat(Object.entries(S.rounds).flatMap(([rid,r])=>Object.entries(r.scores||{}).map(([pl,s])=>({player:pl,pts:s.pts||0,right:s.right||0,day:r.day,roundId:rid,kind:'round'}))));
 }
 
 async function answer(i){
@@ -630,11 +656,11 @@ document.addEventListener('click',async e=>{
   if(act==='start'){b.disabled=true;await startRound();return}
   if(act==='ans'){answer(Number(b.dataset.i));return}
   if(act==='reveal'&&L){S.revealSent=L.roundId+'-'+L.idx;write(()=>db.doc('game/live').update({status:'reveal'}));return}
-  if(act==='abort'){if(confirmed('abort'))write(()=>db.doc('game/live').update({status:'lobby'}));return}
+  if(act==='abort'){if(confirmed('abort'))endRound('lobby');return}
   if(act==='takeover'){if(confirmed('takeover'))write(()=>db.doc('game/live').update({host:S.me}));return}
   if(act==='next'&&L){
     if(L.idx+1<L.qs.length)write(()=>db.doc('game/live').update({status:'question',idx:L.idx+1,qStart:Date.now()}));
-    else write(()=>db.doc('game/live').update({status:'final'}));
+    else endRound('final');
     return;
   }
   if(act==='lobby'){write(()=>db.doc('game/live').update({status:'lobby'}));return}
@@ -670,15 +696,17 @@ async function init(){
   const fs=firebase.firestore();
   // Spara lokalt så att svar och poäng köas om nätet i stugan svajar
   try{await fs.enablePersistence({synchronizeTabs:true})}catch(e){}
-  const db={doc:p=>fs.doc(p),collection:p=>fs.collection(p)};
+  const db={doc:p=>fs.doc(p),collection:p=>fs.collection(p),batch:()=>fs.batch()};
   S.db=db;
   const staleT=setTimeout(()=>{S.stale=true;render()},10000);
   const seen=(name,snap)=>{S.loaded[name]=true;if(!snap.metadata.fromCache){clearTimeout(staleT);S.stale=false}};
   const fail=()=>{clearTimeout(staleT);S.stale=true;render()};
   db.collection('players').onSnapshot(s=>{S.players=Object.fromEntries(s.docs.map(d=>[d.id,d.data()]));seen('players',s);render()},fail);
-  db.doc('game/live').onSnapshot(d=>{S.live=d.exists?d.data():null;seen('live',d);onLive();render()},fail);
-  db.doc('game/used').onSnapshot(d=>{S.used=d.exists?(d.data().ids||[]):[];seen('used',d);render()},fail);
-  db.collection('points').onSnapshot(s=>{S.pts=s.docs.map(d=>({...d.data(),_id:d.id}));S.pmap={};for(const p of S.pts)if(p.kind==='quiz')S.pmap[qKey(p.roundId,p.idx,p.player)]=p;seen('points',s);render()},fail);
+  db.collection('game').onSnapshot(s=>{
+    S.live=null;S.used=[];S.rounds={};
+    for(const d of s.docs){const v=d.data();if(d.id==='live')S.live=v;else if(d.id==='used')S.used=v.ids||[];else if(v.type==='round')S.rounds[d.id]=v}
+    rebuild();seen('game',s);onLive();render()},fail);
+  db.collection('points').onSnapshot(s=>{S.pts=s.docs.map(d=>({...d.data(),_id:d.id}));S.pmap={};for(const p of S.pts)if(p.kind==='quiz')S.pmap[qKey(p.roundId,p.idx,p.player)]=p;rebuild();seen('points',s);render()},fail);
   db.collection('custom').onSnapshot(s=>{S.custom=s.docs.map(d=>({...d.data(),_id:d.id}));seen('custom',s);render()},fail);
 }
 render();
