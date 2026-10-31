@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Fjällkampen</title>
+<title>KnowItAlls</title>
 <meta name="description" content="Familjens frågesport för fjällveckan.">
 <meta name="theme-color" content="#c8372d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Fjällkampen">
+<meta name="apple-mobile-web-app-title" content="KnowItAlls">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
@@ -122,7 +122,7 @@ nav button[aria-current="page"]{color:var(--fg);border-top-color:var(--accent)}
 <div class="wrap">
   <header>
     <div class="mark" aria-hidden="true"></div>
-    <div><div class="brand">Fjällkampen</div><div class="kv" id="kvall">Kväll 1</div></div>
+    <div><div class="brand">KnowItAlls</div><div class="kv" id="kvall">Kväll 1</div></div>
     <button class="me" id="mechip" data-act="switch" hidden></button>
   </header>
   <div id="net" class="notice" hidden></div>
@@ -420,7 +420,7 @@ function viewJoin(){
   const ids=Object.keys(S.players).sort((a,b)=>pname(a).localeCompare(pname(b),'sv'));
   return `${ids.length?`<section class="card"><h2>Vem är du?</h2><p class="hint">Välj dig själv. Telefonen kommer ihåg det.</p>
     <div class="chips">${ids.map(id=>`<button class="chip" data-act="pick" data-id="${id}">${pemo(id)} ${esc(pname(id))}</button>`).join('')}</div></section>`:''}
-  <section class="card"><h2>${ids.length?'Ny spelare':'Gå med i Fjällkampen'}</h2>
+  <section class="card"><h2>${ids.length?'Ny spelare':'Gå med i KnowItAlls'}</h2>
     <input id="jn" maxlength="20" placeholder="Ditt namn" autocomplete="off">
     <div class="label">Välj djur</div>
     <div class="chips">${EMOJI.map(e=>`<button class="chip emo" data-act="emo" data-e="${e}" aria-pressed="${S.emoji===e}">${e}</button>`).join('')}</div>
@@ -499,7 +499,7 @@ function viewFinal(){
 }
 
 function viewPlay(){
-  if(S.noDb)return `<section class="card"><h2>Inte kopplad än</h2><p class="hint">Fjällkampen behöver en Firebase-databas. Fyll i firebase-config.js och ladda om sidan.</p></section>`;
+  if(S.noDb)return `<section class="card"><h2>Inte kopplad än</h2><p class="hint">KnowItAlls behöver en Firebase-databas. Fyll i firebase-config.js och ladda om sidan.</p></section>`;
   if(!S.loaded.players)return `<section class="card"><h2>Laddar…</h2><p class="hint">Hämtar spelare och poäng.</p></section>`;
   if(!S.me||!S.players[S.me])return viewJoin();
   const st=S.live?.status;

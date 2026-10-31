@@ -1,4 +1,4 @@
-# Fjällkampen
+# KnowItAlls
 
 Familjefrågesport för telefonen (webbapp, läggs till på hemskärmen). Poäng sparas i Firebase Firestore.
 
