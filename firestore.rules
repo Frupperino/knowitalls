@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Öppet för alla med länken, bara spelets samlingar, och bara till och med 15 december 2026
+    match /{col}/{id} {
+      allow read, write: if col in ['players', 'points', 'custom', 'game']
+                         && request.time < timestamp.date(2026, 12, 15);
+    }
+  }
+}

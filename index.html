@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fjällkampen</title>
+<meta name="description" content="Familjens frågesport för fjällveckan.">
+<meta name="theme-color" content="#c8372d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fjällkampen">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Familjen+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: en smal mobilkolumn, flikar fast i botten, ledkryss-rött som enda accent */
+:root{
+  --bg:#edf1f3; --surface:#ffffff; --sunk:#e2e8eb; --fg:#13202a; --muted:#5b6c77; --line:#d3dce1;
+  --accent:#c8372d; --accent-fg:#ffffff; --good:#2e7d4f; --bad:#b3362c;
+  --o0:#c8372d; --o1:#22609f; --o2:#b8800f; --o3:#2e7d4f;
+  --display:"Bowlby One","Arial Black",Impact,sans-serif;
+  --body:"Familjen Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c151d; --surface:#15212b; --sunk:#1c2a35; --fg:#e6edf1; --muted:#90a2ad; --line:#263744;
+  --accent:#ff5d4f; --accent-fg:#1a0705; --good:#4cc283; --bad:#ff6b5e;
+  --o0:#d9443a; --o1:#2f74bd; --o2:#c99419; --o3:#2f8f5a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c151d; --surface:#15212b; --sunk:#1c2a35; --fg:#e6edf1; --muted:#90a2ad; --line:#263744;
+  --accent:#ff5d4f; --accent-fg:#1a0705; --good:#4cc283; --bad:#ff6b5e;
+  --o0:#d9443a; --o1:#2f74bd; --o2:#c99419; --o3:#2f8f5a; color-scheme:dark}
+html,body{background:var(--bg);color:var(--fg)}
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px)}
+[hidden]{display:none!important}
+body{margin:0;font-family:var(--body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding-block:12px calc(96px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;gap:10px}
+.mark{width:30px;height:30px;border-radius:6px;background:var(--surface);border:1px solid var(--line);position:relative;flex:none}
+.mark::before,.mark::after{content:"";position:absolute;left:50%;top:50%;width:20px;height:5px;background:var(--accent);border-radius:1px}
+.mark::before{transform:translate(-50%,-50%) rotate(45deg)}
+.mark::after{transform:translate(-50%,-50%) rotate(-45deg)}
+.brand{font-family:var(--display);font-size:22px;letter-spacing:.01em;line-height:1}
+.kv{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.me{margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 8px;font-weight:600;font-size:14px;max-width:50%;min-width:0}
+.me span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h2{font-family:var(--display);font-size:20px;font-weight:400;margin:0;line-height:1.15;text-wrap:balance}
+h3{margin:0;font-size:15px}
+.label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.hint{margin:0;color:var(--muted);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--sunk);border-radius:999px;padding:8px 13px;font-size:15px;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.chip small{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip[aria-pressed="true"] small{color:inherit;opacity:.7}
+.primary{background:var(--accent);color:var(--accent-fg);border:0;border-radius:12px;padding:15px 18px;font-weight:700;font-size:17px;width:100%}
+.primary:disabled{opacity:.45;cursor:default}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-weight:600;font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1 1 auto}
+input,select{font:inherit;color:var(--fg);background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px;width:100%;min-width:0}
+.emo{font-size:22px;padding:6px 9px}
+/* fråga */
+.qmeta{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.timer{height:8px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.timer i{display:block;height:100%;background:var(--accent);width:100%;transition:width .2s linear}
+.q{font-family:var(--body);font-weight:700;font-size:clamp(21px,5.6vw,27px);line-height:1.22;margin:4px 0 2px;text-wrap:balance}
+.opts{display:grid;grid-template-columns:1fr;gap:10px}
+.opt{border:0;border-radius:12px;padding:16px 14px;text-align:left;font-size:18px;font-weight:600;color:#fff;display:flex;gap:12px;align-items:center;min-height:62px;position:relative}
+.opt b{font-family:var(--display);font-weight:400;font-size:15px;width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.22);display:grid;place-items:center;flex:none}
+.opt .cnt{margin-left:auto;font-variant-numeric:tabular-nums;font-size:15px;opacity:.9}
+.o0{background:var(--o0)}.o1{background:var(--o1)}.o2{background:var(--o2)}.o3{background:var(--o3)}
+.opt:disabled{cursor:default}
+.opt.dim{opacity:.32}
+.opt.mine{outline:4px solid var(--fg);outline-offset:2px}
+.opt.right{box-shadow:0 0 0 4px var(--good)}
+.answered{display:flex;flex-wrap:wrap;gap:6px;font-size:22px;min-height:30px}
+.answered .nope{opacity:.25}
+.lock{text-align:center;font-weight:600;color:var(--muted)}
+.host{border-style:dashed}
+.big{font-family:var(--display);font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+/* topplista */
+.lb{display:flex;flex-direction:column}
+.lbr{display:grid;grid-template-columns:30px 34px 1fr auto;gap:8px;align-items:center;padding:10px 2px;border-top:1px solid var(--line)}
+.lbr:first-child{border-top:0}
+.rank{font-family:var(--display);font-size:18px;color:var(--muted);text-align:center}
+.lbr.top .rank{color:var(--accent)}
+.av{font-size:24px;text-align:center}
+.nm{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm small{display:block;color:var(--muted);font-weight:500;font-size:13px}
+.sc{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums;text-align:right}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:14px}
+th,td{padding:7px 8px;text-align:right;border-top:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;border-top:0}
+th:first-child,td:first-child{text-align:left}
+.log{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.log div{display:flex;gap:8px;align-items:center}
+.log span{flex:1;min-width:0}
+.pos{color:var(--good);font-weight:700}.neg{color:var(--bad);font-weight:700}
+.x{border:0;background:transparent;color:var(--muted);font-size:13px;padding:4px 6px;text-decoration:underline}
+.notice{background:var(--sunk);border-radius:12px;padding:12px 14px;font-size:14px}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));z-index:5}
+nav div{display:flex;max-width:560px;width:100%}
+nav button{flex:1;border:0;background:transparent;padding:14px 4px 16px;font-weight:600;font-size:15px;color:var(--muted);border-top:3px solid transparent}
+nav button[aria-current="page"]{color:var(--fg);border-top-color:var(--accent)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;max-width:calc(100% - 32px);z-index:6;text-align:center}
+@media (prefers-reduced-motion:reduce){.timer i{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="mark" aria-hidden="true"></div>
+    <div><div class="brand">Fjällkampen</div><div class="kv" id="kvall">Kväll 1</div></div>
+    <button class="me" id="mechip" data-act="switch" hidden></button>
+  </header>
+  <div id="net" class="notice" hidden></div>
+  <main id="view"><div class="card"><h2>Laddar…</h2><p class="hint">Hämtar spelare och poäng.</p></div></main>
+</div>
+<nav><div>
+  <button data-tab="play" aria-current="page">Spela</button>
+  <button data-tab="board">Topplista</button>
+  <button data-tab="custom">Egna frågor</button>
+</div></nav>
+<div id="toast" hidden></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+// Frågebank: kategori|fråga|rätt svar|fel|fel|fel
+const RAW = `
+F|Vilket är Sveriges högsta berg?|Kebnekaise|Sarektjåkkå|Helagsfjället|Åreskutan
+F|Vilken av Kebnekaises toppar är högst i dag, efter att glaciären smält?|Nordtoppen|Sydtoppen|Västtoppen|Östtoppen
+F|I vilket landskap ligger Åreskutan?|Jämtland|Härjedalen|Lappland|Dalarna
+F|Vilket år fick Sverige sina första nationalparker?|1909|1872|1935|1952
+F|Vilken är Sveriges största nationalpark till ytan?|Padjelanta|Sarek|Abisko|Stora Sjöfallet
+F|Vad kallas gränsen ovanför vilken det inte växer träd?|Trädgränsen|Snögränsen|Fjällkanten|Barrlinjen
+F|Vilket träd bildar oftast trädgränsen i de svenska fjällen?|Fjällbjörk|Tall|Gran|Rönn
+F|Vad heter vandringsleden mellan Abisko och Hemavan?|Kungsleden|Fjälleden|Lapplandsleden|Norrlandsleden
+F|Ungefär hur lång är Kungsleden?|440 km|120 km|900 km|1 500 km
+F|Vilken fågel byter till vit fjäderdräkt på vintern?|Fjällripa|Fjällvråk|Korp|Lavskrika
+F|Vilken liten gnagare i fjällen kan föröka sig explosionsartat vissa år?|Fjällämmel|Hasselmus|Näbbmus|Ekorre
+F|Vad är en jokk?|En fjällbäck|En fjälltopp|En stuga|En sorts släde
+F|Vad heter norrsken på latin?|Aurora borealis|Aurora australis|Lux polaris|Stella nordica
+F|Vad orsakar norrsken?|Partiklar från solen som träffar atmosfären|Månljus som speglas i isen|Blixtar långt bort|Snö som glittrar i rymden
+F|Vilket bär kallas ibland fjällets guld?|Hjortron|Lingon|Blåbär|Kråkbär
+F|Vad kallas det när solen inte går ner på sommaren?|Midnattssol|Polarnatt|Solstånd|Dagjämning
+F|Vad kallas tiden då solen inte går upp alls på vintern?|Polarnatt|Midnattssol|Vårdagjämning|Skymningstid
+F|I vilket landskap ligger Tännforsen?|Jämtland|Lappland|Härjedalen|Ångermanland
+F|Vad kallas de röda kryssen som märker ut vinterleder i fjällen?|Ledkryss|Fjällkors|Snömärken|Kråkfötter
+F|Vilket land gränsar de svenska fjällen mot i väster?|Norge|Finland|Ryssland|Danmark
+F|Vad heter Sveriges högsta berg söder om polcirkeln?|Helagsfjället|Åreskutan|Storsylen|Städjan
+F|Vilken organisation driver många av fjällstugorna längs Kungsleden?|Svenska Turistföreningen|Naturskyddsföreningen|Friluftsfrämjandet|Skidfrämjandet
+S|Hur många landskap har Sverige?|25|21|29|24
+S|Hur många län har Sverige?|21|25|18|24
+S|Vilken är Sveriges största sjö?|Vänern|Vättern|Mälaren|Storsjön
+S|Vilken är Sveriges största ö?|Gotland|Öland|Orust|Hisingen
+S|Vilket år bytte Sverige till högertrafik?|1967|1955|1972|1981
+S|Vilket datum firar Sverige nationaldagen?|6 juni|1 maj|24 juni|30 april
+S|Vilket är Sveriges längsta vattendrag?|Klarälven–Göta älv|Torne älv|Dalälven|Ångermanälven
+S|Vilken stad brukar kallas Lilla London?|Göteborg|Malmö|Uppsala|Norrköping
+S|Vilken är Sveriges tredje största stad?|Malmö|Uppsala|Göteborg|Västerås
+S|Ungefär hur många bor i Sverige?|10,6 miljoner|8,2 miljoner|12,9 miljoner|15 miljoner
+S|Vad heter bron mellan Sverige och Danmark?|Öresundsbron|Ölandsbron|Högakustenbron|Stora Bältbron
+S|Vilket landskap kallas Sveriges kornbod?|Skåne|Östergötland|Uppland|Halland
+S|Vilken svensk uppfann dynamiten?|Alfred Nobel|Anders Celsius|Carl von Linné|Gustaf de Laval
+S|Mot vilket land har Sverige längst landgräns?|Norge|Finland|Danmark|Estland
+S|Vad heter Stockholms gamla stadskärna?|Gamla stan|Södermalm|Östermalm|Kungsholmen
+S|I vilken stad ligger Liseberg?|Göteborg|Stockholm|Malmö|Jönköping
+S|På vilken ö i Stockholm ligger riksdagshuset?|Helgeandsholmen|Riddarholmen|Skeppsholmen|Djurgården
+S|Vilken fågel röstades fram till Sveriges nationalfågel 2015?|Koltrast|Gråsparv|Talgoxe|Kungsörn
+S|Vilken blomma räknas som Sveriges nationalblomma?|Linnea|Blåklint|Prästkrage|Kungsängslilja
+S|I vilken stad delas Nobelpriset ut varje år (utom fredspriset)?|Stockholm|Uppsala|Oslo|Göteborg
+S|Vad heter Sveriges kung?|Carl XVI Gustaf|Gustaf VI Adolf|Carl XII Gustaf|Oscar III
+G|Vilket är världens högsta berg?|Mount Everest|K2|Kilimanjaro|Mont Blanc
+G|Vilken flod räknas oftast som världens längsta?|Nilen|Amazonfloden|Mississippi|Yangtze
+G|Vad är Australiens huvudstad?|Canberra|Sydney|Melbourne|Perth
+G|Vad är Kanadas huvudstad?|Ottawa|Toronto|Vancouver|Montréal
+G|Vilket är världens största hav?|Stilla havet|Atlanten|Indiska oceanen|Norra ishavet
+G|Vilket land har flest invånare?|Indien|Kina|USA|Indonesien
+G|Vilket är världens största land till ytan?|Ryssland|Kanada|Kina|USA
+G|Vilken är världens största varma öken?|Sahara|Gobi|Kalahari|Atacama
+G|I vilket land ligger Machu Picchu?|Peru|Mexiko|Chile|Bolivia
+G|Vilket land har formen av en stövel?|Italien|Grekland|Spanien|Portugal
+G|Vilken stad kallas Den eviga staden?|Rom|Aten|Paris|Jerusalem
+G|Vad är Islands huvudstad?|Reykjavik|Akureyri|Tórshavn|Nuuk
+G|Vilket hav ligger mellan Europa och Afrika?|Medelhavet|Röda havet|Svarta havet|Kaspiska havet
+G|Vilken är världens djupaste sjö?|Bajkalsjön|Tanganyikasjön|Victoriasjön|Vättern
+G|Vilket land har flest sjöar?|Kanada|Finland|Sverige|Ryssland
+G|Vilket är Europas högsta berg om man räknar med Kaukasus?|Elbrus|Mont Blanc|Matterhorn|Galdhøpiggen
+G|I vilket land ligger Kilimanjaro?|Tanzania|Kenya|Uganda|Etiopien
+G|Vilken flod rinner genom Paris?|Seine|Loire|Rhen|Rhône
+G|Vilket är Norges högsta berg?|Galdhøpiggen|Glittertind|Snøhetta|Kebnekaise
+G|Vilket land har flest tidszoner (med alla sina territorier)?|Frankrike|Ryssland|USA|Kina
+G|Vad är Japans huvudstad?|Tokyo|Kyoto|Osaka|Peking
+G|Vilken världsdel ligger Egypten i?|Afrika|Asien|Europa|Oceanien
+H|Vilket år landade människor på månen första gången?|1969|1965|1972|1959
+H|Vem var först att gå på månen?|Neil Armstrong|Buzz Aldrin|Jurij Gagarin|Michael Collins
+H|Vilket år föll Berlinmuren?|1989|1991|1985|1979
+H|Vilket år sjönk Titanic?|1912|1905|1921|1898
+H|Vem valdes till Sveriges kung i Strängnäs 1523?|Gustav Vasa|Gustav II Adolf|Karl XI|Erik XIV
+H|Vad hette regalskeppet som sjönk i Stockholm 1628?|Vasa|Kronan|Svärdet|Mars
+H|Vilket år tog andra världskriget slut?|1945|1944|1946|1918
+H|Vem blev Sveriges första kvinnliga statsminister?|Magdalena Andersson|Mona Sahlin|Margot Wallström|Anna Lindh
+H|Vilket år fick kvinnor rösta i ett riksdagsval första gången i Sverige?|1921|1909|1945|1932
+H|Vad hette vikingarnas handelsstad på Björkö i Mälaren?|Birka|Uppsala|Sigtuna|Hedeby
+H|Vem seglade till Amerika 1492?|Christofer Columbus|Vasco da Gama|Ferdinand Magellan|James Cook
+H|Vilket år gick Sverige med i EU?|1995|1991|2001|1986
+H|Vilket år blev Sverige medlem i Nato?|2024|2022|2023|2025
+H|Vilket år mördades Olof Palme?|1986|1982|1990|1976
+H|Vilket år började första världskriget?|1914|1912|1917|1939
+H|Vilken svensk kung stupade vid Fredriksten i Norge 1718?|Karl XII|Karl XI|Gustav III|Gustav II Adolf
+H|Vilken kung sköts på en maskeradbal 1792?|Gustav III|Gustav IV Adolf|Karl XII|Adolf Fredrik
+H|Vilken valuta hade Sverige innan kronan infördes 1873?|Riksdaler|Mark|Gulden|Pund
+H|Vad var Napoleon Bonaparte?|Fransk kejsare|Italiensk påve|Spansk upptäcktsresande|Rysk tsar
+H|Vilket folk byggde pyramiderna i Giza?|De gamla egyptierna|Romarna|Grekerna|Vikingarna
+H|Vem var den första människan i rymden?|Jurij Gagarin|Neil Armstrong|John Glenn|Valentina Teresjkova
+H|Vilket år inträffade Stockholms blodbad?|1520|1523|1397|1658
+M|Vilken svensk grupp vann Eurovision 1974 med Waterloo?|ABBA|Roxette|Ace of Base|Europe
+M|Vem vann Eurovision för Sverige 2012 med Euphoria?|Loreen|Måns Zelmerlöw|Carola|Charlotte Perrelli
+M|Vem vann Eurovision för Sverige 2015 med Heroes?|Måns Zelmerlöw|Loreen|Danny Saucedo|Eric Saade
+M|Hur många gånger hade Sverige vunnit Eurovision till och med 2025?|7|5|6|8
+M|Vad heter flickan i Villa Villekulla som kan lyfta en häst?|Pippi Långstrump|Ronja|Madicken|Lotta
+M|Vad heter Ronja Rövardotters pappa?|Mattis|Borka|Birk|Skalle-Per
+M|I vilken film sjungs Let It Go (Slå dig fri)?|Frost|Vaiana|Trassel|Encanto
+M|Vad heter Kalle Ankas tre brorsöner?|Knatte, Fnatte och Tjatte|Pippi, Annika och Tommy|Musse, Långben och Pluto|Ville, Valle och Viktor
+M|Vad heter snögubben i Frost?|Olof|Sven|Kristoffer|Hans
+M|Vad heter renen i Frost?|Sven|Olof|Rudolf|Blixten
+M|Vilken svensk artist sjunger Dancing On My Own?|Robyn|Zara Larsson|Tove Lo|Lykke Li
+M|Vem gjorde låten Levels?|Avicii|Swedish House Mafia|Alesso|Axwell
+M|Vilket band sjöng The Final Countdown?|Europe|Roxette|ABBA|The Hives
+M|Vem skrev Millennium-trilogin?|Stieg Larsson|Henning Mankell|Camilla Läckberg|Jan Guillou
+M|Vad heter lejonungen i Lejonkungen?|Simba|Nala|Mufasa|Scar
+M|Vem är Luke Skywalkers pappa i Star Wars?|Darth Vader|Obi-Wan Kenobi|Yoda|Han Solo
+M|Vad heter pappan i The Simpsons?|Homer|Bart|Ned|Moe
+M|Vad heter Pippi Långstrumps häst?|Lilla Gubben|Herr Nilsson|Lilla Skutt|Gamle Gubben
+M|Vad heter Pippi Långstrumps apa?|Herr Nilsson|Lilla Gubben|Kalle|Rasmus
+M|Vad heter trollkarlen som går på Hogwarts med Ron och Hermione?|Harry Potter|Frodo|Merlin|Gandalf
+M|Vilket år kom första Harry Potter-boken?|1997|1989|2001|2005
+M|Vilken gård bor Emil i Lönneberga på?|Katthult|Bullerbyn|Mattisborgen|Saltkråkan
+P|Hur många spelare har ett fotbollslag på planen samtidigt?|11|9|10|12
+P|Hur långt är ett maratonlopp?|42,195 km|40 km|45 km|38,5 km
+P|Mellan vilka orter går Vasaloppet?|Sälen och Mora|Mora och Falun|Sälen och Orsa|Idre och Mora
+P|Hur långt är Vasaloppet?|90 km|70 km|110 km|50 km
+P|Vilket land har vunnit flest herr-VM i fotboll?|Brasilien|Tyskland|Italien|Argentina
+P|Hur ofta hålls olympiska sommarspel?|Vart fjärde år|Vartannat år|Vart tredje år|Vart femte år
+P|Vilken svensk vann Wimbledon fem år i rad?|Björn Borg|Mats Wilander|Stefan Edberg|Robin Söderling
+P|Hur många perioder har en ishockeymatch?|3|2|4|5
+P|Vilken svensk stavhoppare har slagit världsrekordet gång på gång?|Armand Duplantis|Patrik Sjöberg|Christian Olsson|Stefan Holm
+P|Hur många ringar finns i OS-symbolen?|5|4|6|7
+P|Vilken gren är Ingemar Stenmark känd för?|Alpint (slalom)|Längdskidor|Backhoppning|Skidskytte
+P|Hur många hål har en vanlig golfrunda?|18|9|12|24
+P|Vad kallas det när en spelare gör tre mål i samma match?|Hattrick|Grand slam|Trippel|Strike
+P|Var hölls vinter-OS 2026?|Milano–Cortina|Stockholm–Åre|Oslo|Sapporo
+P|Hur lång är en olympisk simbassäng?|50 meter|25 meter|100 meter|33 meter
+P|Vilken färg har ledartröjan i Tour de France?|Gul|Röd|Grön|Rosa
+P|Vad gör man i skidskytte förutom att åka skidor?|Skjuter|Hoppar|Kastar spjut|Simmar
+P|Vad heter föremålet man spelar med i ishockey?|Puck|Boll|Fjäderboll|Disk
+P|Vilken sport spelas i Wimbledon?|Tennis|Golf|Cricket|Badminton
+P|Hur många poäng är ett mål värt i basket när man skjuter bakom trepoängslinjen?|3|2|4|1
+P|Vem har gjort flest mål för Sveriges herrlandslag i fotboll?|Zlatan Ibrahimović|Henrik Larsson|Gunnar Nordahl|Sven Rydell
+D|Vilket är världens största djur?|Blåval|Afrikansk elefant|Valhaj|Kaskelot
+D|Hur många ben har en spindel?|8|6|10|12
+D|Vilket är världens snabbaste landdjur?|Gepard|Lejon|Antilop|Struts
+D|Vad äter pandor mest av?|Bambu|Fisk|Eukalyptus|Bär
+D|Vilket av djuren går i ide på vintern?|Björn|Älg|Räv|Lodjur
+D|Hur många hjärtan har en bläckfisk?|3|1|2|8
+D|Vilket däggdjur kan flyga på riktigt?|Fladdermus|Ekorre|Mullvad|Igelkott
+D|Vad kallas en älghona?|Älgko|Älgsto|Älgtacka|Älgmärr
+D|Vilket av djuren är ett pungdjur?|Känguru|Panda|Lama|Tapir
+D|Ungefär hur länge är en elefant dräktig?|22 månader|9 månader|12 månader|36 månader
+D|Vilken fågel kan inte flyga?|Pingvin|Albatross|Svala|Örn
+D|Vilket är det största kattdjuret?|Tiger|Lejon|Jaguar|Leopard
+D|Vilken färg har en isbjörns hud under pälsen?|Svart|Vit|Rosa|Grå
+D|Hur många ben har en insekt?|6|8|4|10
+D|Vad heter Sveriges enda giftorm?|Huggorm|Snok|Hasselsnok|Kopparödla
+D|Vilket djur bygger dammar av trästammar?|Bäver|Utter|Bisam|Mink
+D|Vilket av djuren lever i de svenska fjällen?|Fjällräv|Ökenräv|Fennek|Kapräv
+D|Vad kallas en grupp vargar?|Flock|Hjord|Svärm|Stim
+D|Hur många armar har en sjöstjärna oftast?|5|4|6|8
+D|Vilket djur är Sveriges största rovdjur?|Björn|Varg|Järv|Lodjur
+D|Vilket djur har längst hals?|Giraff|Struts|Kamel|Lama
+D|Vilket är världens största fågel?|Struts|Kondor|Albatross|Kungsörn
+K|Vilket land kommer pizzan från?|Italien|Grekland|USA|Frankrike
+K|Vad är huvudingrediensen i guacamole?|Avokado|Ärtor|Gurka|Spenat
+K|Vilken maträtt består av tärnad potatis, kött och lök?|Pytt i panna|Kalops|Pölsa|Kåldolmar
+K|Vad är surströmming?|Jäst strömming|Rökt lax|Gravad sill|Torkad torsk
+K|Vilken läsk säljer mest i Sverige i december?|Julmust|Coca-Cola|Sockerdricka|Pommac
+K|Vilken sylt hör traditionellt till köttbullar?|Lingonsylt|Hjortronsylt|Blåbärssylt|Hallonsylt
+K|Vad tillverkar man av mjölk och löpe?|Ost|Smör|Grädde|Glass
+K|Vilken frukt torkas till russin?|Vindruvor|Plommon|Aprikoser|Fikon
+K|Vad heter det franska bakverket som är format som en halvmåne?|Croissant|Baguette|Éclair|Macaron
+K|Vilket land kommer sushi från?|Japan|Kina|Thailand|Korea
+K|Vilket datum är kanelbullens dag?|4 oktober|12 december|3 februari|25 mars
+K|Vilken dag äter man traditionellt våfflor i Sverige?|25 mars|4 oktober|1 maj|13 december
+K|Vilken dag äter man traditionellt semlor?|Fettisdagen|Askonsdagen|Långfredagen|Valborg
+K|Vilken krydda gör lussebullar gula?|Saffran|Gurkmeja|Kanel|Kardemumma
+K|Vilket djur kommer renskav från?|Ren|Älg|Hjort|Lamm
+K|Vad heter den italienska efterrätten med mascarpone och kaffe?|Tiramisu|Panna cotta|Gelato|Cannoli
+K|Vilken nöt görs marsipan av?|Mandel|Hasselnöt|Valnöt|Jordnöt
+K|Vad är tzatziki gjort av?|Yoghurt, gurka och vitlök|Tomat och lök|Kikärtor och sesam|Avokado och lime
+K|I vilken del av Sverige är palt en klassisk rätt?|Norrbotten|Skåne|Gotland|Småland
+K|Vilken grönsak är huvudingrediensen i pommes frites?|Potatis|Morot|Kålrot|Palsternacka
+K|Vad är huvudingrediensen i hummus?|Kikärtor|Linser|Bönor|Ärtor
+K|Vilket land kommer tacos ursprungligen från?|Mexiko|Spanien|Brasilien|USA
+V|Vilken planet ligger närmast solen?|Merkurius|Venus|Mars|Jorden
+V|Hur många planeter finns det i vårt solsystem?|8|9|7|10
+V|Vilken är solsystemets största planet?|Jupiter|Saturnus|Neptunus|Jorden
+V|Vid vilken temperatur kokar vatten vid havsytans nivå?|100 °C|90 °C|120 °C|80 °C
+V|Vad är H₂O?|Vatten|Väte|Salt|Syre
+V|Vilken gas tar växter upp när de gör fotosyntes?|Koldioxid|Syre|Kväve|Helium
+V|Hur många ben har en vuxen människa?|206|186|230|312
+V|Vilket är kroppens största organ?|Huden|Levern|Hjärnan|Lungorna
+V|Ungefär hur lång tid tar solljuset till jorden?|8 minuter|8 sekunder|1 timme|1 dygn
+V|Vem tog fram relativitetsteorin?|Albert Einstein|Isaac Newton|Niels Bohr|Galileo Galilei
+V|Vad är 0 °C i Fahrenheit?|32 °F|0 °F|100 °F|−32 °F
+V|Vad är den kemiska beteckningen för guld?|Au|Ag|Gd|Go
+V|Vilken planet kallas den röda planeten?|Mars|Venus|Jupiter|Merkurius
+V|Hur många tänder har en vuxen människa med visdomständer?|32|28|36|24
+V|Vad mäter en barometer?|Lufttryck|Temperatur|Fuktighet|Vindstyrka
+V|Vad heter vår galax?|Vintergatan|Andromeda|Orion|Karlavagnen
+V|Vilken blodgrupp kan ge blod till alla?|0 negativ|AB positiv|A positiv|B negativ
+V|Hur många kromosomer har en människa normalt?|46|23|48|64
+V|Vilken stjärna hjälper Karlavagnen dig att hitta?|Polstjärnan|Sirius|Vega|Betelgeuse
+V|Vilken svensk gav namn åt en temperaturskala?|Anders Celsius|Alfred Nobel|Carl von Linné|Jöns Jacob Berzelius
+V|Vilket organ pumpar blodet runt i kroppen?|Hjärtat|Levern|Lungorna|Njurarna
+V|Vad heter jordens enda naturliga måne?|Månen|Phobos|Europa|Titan
+B|Vilken färg får man om man blandar blått och gult?|Grönt|Lila|Orange|Brunt
+B|Hur många dagar har en vecka?|7|5|6|10
+B|Vad säger en ko?|Mu|Mjau|Voff|Kvack
+B|Vilket djur har en lång snabel?|Elefant|Giraff|Häst|Zebra
+B|Vad heter Bamses vän som är en sköldpadda?|Skalman|Lille Skutt|Vargen|Knorran
+B|Vad heter Bamses vän som är en kanin?|Lille Skutt|Skalman|Vargen|Brummelisa
+B|Vilken årstid kommer efter vintern?|Våren|Sommaren|Hösten|Vintern igen
+B|Hur många ben har en hund?|4|2|6|8
+B|Vilken färg har en mogen banan?|Gul|Blå|Röd|Svart
+B|Vad heter huset där Pippi bor?|Villa Villekulla|Katthult|Bullerbyn|Mattisborgen
+B|Vilken av dessa är en grönsak?|Morot|Äpple|Banan|Päron
+B|Hur många fingrar har man på en hand?|5|4|6|10
+B|Vad heter planeten vi bor på?|Jorden|Mars|Månen|Solen
+B|Vilket djur säger kvack?|Anka|Katt|Gris|Får
+B|Vad blir vatten när det fryser?|Is|Ånga|Sand|Mjölk
+B|Vilket av djuren är störst?|Elefant|Katt|Hund|Häst
+B|Vad heter Nalle Puhs kompis som är en liten gris?|Nasse|Tigger|I-or|Kanin
+B|Vilken färg har snö?|Vit|Grön|Blå|Gul
+B|Vem är Mamma Mus bästa kompis?|Kråkan|Pettson|Findus|Alfons
+B|Vad heter katten som bor med Pettson?|Findus|Gustav|Murre|Gosan
+B|Hur många hjul har en cykel?|2|3|4|1
+B|Vilket djur är känt för att bära sitt hus på ryggen?|Snigel|Mus|Fjäril|Groda
+B|Vad heter Kalle Ankas flickvän?|Kajsa Anka|Mimmi Pigg|Klarabella|Daisy Duck
+`;
+
+const CATS = {X:'Blandat',F:'Fjäll & natur',S:'Sverige',G:'Geografi',H:'Historia',M:'Film, tv & musik',P:'Sport',D:'Djur',K:'Mat & dryck',V:'Vetenskap',B:'Barnfrågor',E:'Familjen'};
+const EMOJI = ['🦌','🐻','🦊','🐺','🦉','🐰','🦅','🐿️','🐑','🐟','🦫','🐧'];
+const LETTERS = ['A','B','C','D'];
+
+function hash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36)}
+const BANK = RAW.trim().split('\n').map(l=>{const [cat,q,a,...w]=l.split('|');return {id:'b'+hash(q),cat,q,a,w}});
+
+const S = {db:null, me:null, players:{}, live:null, pts:[], pmap:{}, custom:[], used:[], tab:'play',
+  setup:{cat:'X',n:10,dur:20}, emoji:EMOJI[0], seenKey:null, seenAt:0, timeoutKey:null, revealSent:null,
+  confirm:null, loaded:{}, stale:false, readonly:false, noDb:false};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => {a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+// Kvällen räknas till 06:00 nästa morgon, så sena omgångar hamnar på rätt kväll
+function dayKey(t){const d=new Date(t-6*3600e3);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function dayLabel(k){const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('sv-SE',{weekday:'short',day:'numeric',month:'short'})}
+const pname = id => S.players[id]?.name || 'Okänd';
+const pemo = id => S.players[id]?.emoji || '❔';
+const isHost = () => !!(S.live && S.live.host === S.me);
+const qKey = (r,i,p) => r+'-'+i+'-'+p;
+const pointFor = (r,i,p) => S.pmap[qKey(r,i,p)];
+const remaining = () => S.live ? S.live.dur*1000 - (Date.now()-S.seenAt) : 0;
+function setMe(id){S.me=id;try{id?localStorage.setItem('fjk-me',id):localStorage.removeItem('fjk-me')}catch(e){}}
+
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4000)}
+async function write(fn){
+  try{await fn();return true}
+  catch(e){
+    if(e && e.code==='permission-denied'){S.readonly=true;toast('Databasen tar inte emot ändringar. Kolla reglerna i Firebase.')}
+    else if(e && e.code==='resource-exhausted'){toast('Gratiskvoten för idag är slut.')}
+    else toast('Kunde inte spara. Kolla nätet och försök igen.');
+    render();return false;
+  }
+}
+// Tvåstegsbekräftelse för knappar som tar bort eller avbryter
+function confirmed(key){if(S.confirm===key){S.confirm=null;return true}S.confirm=key;setTimeout(()=>{if(S.confirm===key){S.confirm=null;render()}},3500);render();return false}
+const cLabel = (key,label,sure) => S.confirm===key ? (sure||'Tryck igen') : label;
+
+// ---------- vyer ----------
+function standings(filter){
+  const tot={};for(const id in S.players)tot[id]=0;
+  for(const p of S.pts){if(filter&&!filter(p))continue;if(p.player in tot)tot[p.player]+=p.pts||0}
+  return Object.entries(tot).sort((a,b)=>b[1]-a[1]);
+}
+function lbRows(list,sub){
+  if(!list.length)return '<p class="hint">Inga spelare än.</p>';
+  let rank=0,prev=null;
+  return '<div class="lb">'+list.map(([id,sc],i)=>{if(sc!==prev){rank=i+1;prev=sc}
+    return `<div class="lbr${rank<=3&&sc>0?' top':''}"><div class="rank">${rank}</div><div class="av">${pemo(id)}</div>
+    <div class="nm">${esc(pname(id))}${sub?`<small>${esc(sub(id))}</small>`:''}</div><div class="sc">${sc}</div></div>`}).join('')+'</div>';
+}
+
+function viewJoin(){
+  const ids=Object.keys(S.players).sort((a,b)=>pname(a).localeCompare(pname(b),'sv'));
+  return `${ids.length?`<section class="card"><h2>Vem är du?</h2><p class="hint">Välj dig själv. Telefonen kommer ihåg det.</p>
+    <div class="chips">${ids.map(id=>`<button class="chip" data-act="pick" data-id="${id}">${pemo(id)} ${esc(pname(id))}</button>`).join('')}</div></section>`:''}
+  <section class="card"><h2>${ids.length?'Ny spelare':'Gå med i Fjällkampen'}</h2>
+    <input id="jn" maxlength="20" placeholder="Ditt namn" autocomplete="off">
+    <div class="label">Välj djur</div>
+    <div class="chips">${EMOJI.map(e=>`<button class="chip emo" data-act="emo" data-e="${e}" aria-pressed="${S.emoji===e}">${e}</button>`).join('')}</div>
+    <button class="primary" data-act="join">Gå med</button>
+  </section>`;
+}
+
+function viewLobby(){
+  const used=new Set(S.used);
+  const chip=(k)=>{const pool=poolFor(k);const left=pool.filter(q=>!used.has(q.id)).length;
+    return `<button class="chip" data-act="cat" data-v="${k}" aria-pressed="${S.setup.cat===k}">${CATS[k]} <small>${left}</small></button>`};
+  const opt=(f,v,l)=>`<button class="chip" data-act="set" data-f="${f}" data-v="${v}" aria-pressed="${S.setup[f]===v}">${l}</button>`;
+  const tonight=dayKey(Date.now());
+  return `<section class="card"><h2>Ny runda</h2>
+    <div class="label">Kategori · nya frågor kvar</div>
+    <div class="chips">${Object.keys(CATS).map(chip).join('')}</div>
+    <div class="label">Antal frågor</div><div class="chips">${opt('n',5,'5')}${opt('n',10,'10')}${opt('n',15,'15')}</div>
+    <div class="label">Tid per fråga</div><div class="chips">${opt('dur',15,'15 s')}${opt('dur',20,'20 s')}${opt('dur',30,'30 s')}</div>
+    <button class="primary" data-act="start" ${S.readonly?'disabled':''}>Starta rundan</button>
+    <p class="hint">Den som startar blir frågevärd och styr tempot. Värden spelar också. Rätt svar ger 100 poäng plus upp till 50 för snabbhet.</p>
+  </section>
+  <section class="card"><h2>Ikväll</h2>${lbRows(standings(p=>p.day===tonight).slice(0,6))}</section>
+  <section class="card"><h2>Spelare utan telefon</h2><p class="hint">Lägg till dem här. Värden trycker på deras namn när de svarar rätt högt.</p>
+    <input id="an" maxlength="20" placeholder="Namn" autocomplete="off">
+    <div class="chips">${EMOJI.map(e=>`<button class="chip emo" data-act="emo" data-e="${e}" aria-pressed="${S.emoji===e}">${e}</button>`).join('')}</div>
+    <button class="ghost" data-act="addplayer">Lägg till spelare</button>
+  </section>`;
+}
+
+function hostBar(inner){
+  if(isHost())return `<section class="card host"><div class="label">Du är värd</div>${inner}</section>`;
+  if(!S.me||!S.players[S.me])return '';
+  return `<div class="row" style="justify-content:center"><span class="hint" style="flex:0 1 auto">Värd: ${pemo(S.live.host)} ${esc(pname(S.live.host))}</span>
+    <button class="x" data-act="takeover" style="flex:0 0 auto">${cLabel('takeover','Ta över som värd','Tryck igen för att ta över')}</button></div>`;
+}
+
+function viewQuestion(){
+  const L=S.live,q=L.qs[L.idx],mine=pointFor(L.roundId,L.idx,S.me),rem=remaining(),out=rem<=0;
+  const canAns=!mine&&!out&&S.me&&S.players[S.me]&&!S.readonly;
+  const ids=Object.keys(S.players);
+  return `<section class="card">
+    <div class="qmeta"><span>Fråga ${L.idx+1} av ${L.qs.length}</span><span>${esc(CATS[q.cat]||'')}</span></div>
+    <div class="timer"><i id="tbar"></i></div>
+    <h2 class="q">${esc(q.q)}</h2>
+    <div class="opts">${q.o.map((o,i)=>`<button class="opt o${i}${mine?(mine.choice===i?' mine':' dim'):''}" data-act="ans" data-i="${i}" ${canAns?'':'disabled'}><b>${LETTERS[i]}</b><span>${esc(o)}</span></button>`).join('')}</div>
+    <div class="lock">${mine?'Svar inlåst. Väntar på de andra.':out?'Tiden är slut.':`<span id="tnum">${Math.ceil(rem/1000)}</span> sekunder kvar`}</div>
+    <div class="answered" aria-label="Har svarat">${ids.map(id=>`<span class="${pointFor(L.roundId,L.idx,id)?'':'nope'}" title="${esc(pname(id))}">${pemo(id)}</span>`).join('')}</div>
+  </section>
+  ${hostBar(`<div class="row"><button class="ghost" data-act="reveal">Visa svaret nu</button><button class="ghost" data-act="abort">${cLabel('abort','Avsluta rundan')}</button></div>`)}`;
+}
+
+function viewReveal(){
+  const L=S.live,q=L.qs[L.idx],mine=pointFor(L.roundId,L.idx,S.me),last=L.idx+1>=L.qs.length;
+  const ans=Object.keys(S.players).map(id=>[id,pointFor(L.roundId,L.idx,id)]);
+  const cnt=[0,0,0,0];ans.forEach(([,p])=>{if(p&&p.choice>=0)cnt[p.choice]++});
+  const right=ans.filter(([,p])=>p&&p.correct).sort((a,b)=>b[1].pts-a[1].pts);
+  const missing=ans.filter(([,p])=>!p||p.manual);
+  return `<section class="card">
+    <div class="qmeta"><span>Fråga ${L.idx+1} av ${L.qs.length}</span><span>Facit</span></div>
+    <h2 class="q">${esc(q.q)}</h2>
+    <div class="opts">${q.o.map((o,i)=>`<button class="opt o${i}${i===q.c?' right':' dim'}${mine&&mine.choice===i?' mine':''}" disabled><b>${LETTERS[i]}</b><span>${esc(o)}</span><span class="cnt">${cnt[i]||''}</span></button>`).join('')}</div>
+    ${mine?`<div class="lock">${mine.correct?`Rätt! +${mine.pts} poäng`:'Fel den här gången.'}</div>`:''}
+    <div class="label">Rätt svar</div>
+    ${right.length?`<div class="log">${right.map(([id,p])=>`<div><span>${pemo(id)} ${esc(pname(id))}</span><span class="pos" style="flex:0 0 auto">+${p.pts}</span></div>`).join('')}</div>`:'<p class="hint">Ingen hade rätt.</p>'}
+  </section>
+  ${hostBar(`${missing.length?`<div class="label">Svarade rätt utan telefon? Tryck på dem</div><div class="chips">${missing.map(([id,p])=>`<button class="chip" data-act="manual" data-id="${id}" aria-pressed="${!!p}">${pemo(id)} ${esc(pname(id))}</button>`).join('')}</div>`:''}
+    <button class="primary" data-act="next">${last?'Visa rundans resultat':'Nästa fråga'}</button>`)}`;
+}
+
+function viewFinal(){
+  const L=S.live,list=standings(p=>p.roundId===L.roundId),tonight=dayKey(Date.now());
+  return `<section class="card"><h2>Rundan är klar</h2><p class="hint">${esc(CATS[L.cat]||'')} · ${L.qs.length} frågor</p>
+    ${lbRows(list,id=>{const n=S.pts.filter(p=>p.roundId===L.roundId&&p.player===id&&p.correct).length;return n+' rätt'})}</section>
+  <section class="card"><h2>Ikväll totalt</h2>${lbRows(standings(p=>p.day===tonight).slice(0,6))}</section>
+  ${hostBar('<button class="primary" data-act="lobby">Tillbaka till start</button>')}`;
+}
+
+function viewPlay(){
+  if(S.noDb)return `<section class="card"><h2>Inte kopplad än</h2><p class="hint">Fjällkampen behöver en Firebase-databas. Fyll i firebase-config.js och ladda om sidan.</p></section>`;
+  if(!S.loaded.players)return `<section class="card"><h2>Laddar…</h2><p class="hint">Hämtar spelare och poäng.</p></section>`;
+  if(!S.me||!S.players[S.me])return viewJoin();
+  const st=S.live?.status;
+  if(st==='question')return viewQuestion();
+  if(st==='reveal')return viewReveal();
+  if(st==='final')return viewFinal();
+  return viewLobby();
+}
+
+function viewBoard(){
+  const days=[...new Set(S.pts.map(p=>p.day))].sort();
+  const week=standings();
+  const tbl=days.length?`<div class="tbl"><table><thead><tr><th>Spelare</th>${days.map(d=>`<th>${esc(dayLabel(d))}</th>`).join('')}<th>Totalt</th></tr></thead><tbody>
+    ${week.map(([id,sc])=>`<tr><td>${pemo(id)} ${esc(pname(id))}</td>${days.map(d=>`<td>${S.pts.filter(p=>p.player===id&&p.day===d).reduce((s,p)=>s+(p.pts||0),0)}</td>`).join('')}<td><b>${sc}</b></td></tr>`).join('')}
+    </tbody></table></div>`:'<p class="hint">Poängen per kväll dyker upp här efter första rundan.</p>';
+  const bonus=S.pts.filter(p=>p.kind==='bonus').sort((a,b)=>b.at-a.at).slice(0,12);
+  const ids=Object.keys(S.players);
+  return `<section class="card"><h2>Hela veckan</h2>${lbRows(week,id=>{const r=S.pts.filter(p=>p.player===id&&p.correct).length;return r+' rätta svar'})}</section>
+  <section class="card"><h2>Per kväll</h2>${tbl}</section>
+  <section class="card"><h2>Ge poäng</h2><p class="hint">För allt annat ni tävlar i: kortspel, pulkarace, bästa fikat. Minuspoäng går också.</p>
+    <select id="bp">${ids.map(id=>`<option value="${id}">${pemo(id)} ${esc(pname(id))}</option>`).join('')}</select>
+    <div class="row"><input id="bv" type="number" inputmode="numeric" placeholder="Poäng, t.ex. 50" style="flex:1 1 120px"><input id="br" maxlength="40" placeholder="För vad?" style="flex:2 1 160px"></div>
+    <button class="primary" data-act="bonus" ${S.readonly||!ids.length?'disabled':''}>Ge poäng</button>
+    ${bonus.length?`<div class="label">Senast</div><div class="log">${bonus.map(b=>`<div><span>${pemo(b.player)} ${esc(pname(b.player))} · ${esc(b.reason||'Bonus')} · ${esc(dayLabel(b.day))}</span><span class="${b.pts<0?'neg':'pos'}">${b.pts>0?'+':''}${b.pts}</span><button class="x" data-act="delbonus" data-id="${b._id}">${cLabel('b'+b._id,'Ta bort')}</button></div>`).join('')}</div>`:''}
+  </section>`;
+}
+
+function viewCustom(){
+  const mine=S.custom.filter(c=>c.by===S.me);
+  return `<section class="card"><h2>Egna frågor</h2>
+    <p class="hint">Skriv frågor om familjen, släkten eller resan. De hamnar i kategorin Familjen och i Blandat. Andra ser bara att frågan finns, inte svaret.</p>
+    <input id="cq" maxlength="160" placeholder="Fråga, t.ex. Vem ramlade i bäcken 2019?">
+    <input id="ca" maxlength="60" placeholder="Rätt svar">
+    <input id="cw1" maxlength="60" placeholder="Fel svar 1">
+    <input id="cw2" maxlength="60" placeholder="Fel svar 2">
+    <input id="cw3" maxlength="60" placeholder="Fel svar 3">
+    <button class="primary" data-act="addq" ${S.readonly||!S.me?'disabled':''}>Lägg till frågan</button>
+    ${!S.me?'<p class="hint">Gå med under Spela först.</p>':''}
+  </section>
+  <section class="card"><h2>${S.custom.length} ${S.custom.length===1?'fråga':'frågor'} i Familjen</h2>
+    ${mine.length?`<div class="label">Dina frågor</div><div class="log">${mine.map(c=>`<div><span>${esc(c.q)}</span><button class="x" data-act="delq" data-id="${c._id}">${cLabel('q'+c._id,'Ta bort')}</button></div>`).join('')}</div>`:'<p class="hint">Du har inte lagt till några än.</p>'}
+  </section>`;
+}
+
+// Behåll inmatning och fokus när vyn ritas om av live-data
+function render(){
+  const vals={};let focus=null,sel=null;
+  document.querySelectorAll('#view input,#view select').forEach(el=>{if(el.id)vals[el.id]=el.value});
+  const a=document.activeElement;if(a&&a.id&&vals[a.id]!==undefined){focus=a.id;try{sel=[a.selectionStart,a.selectionEnd]}catch(e){}}
+  $('#view').innerHTML=S.tab==='play'?viewPlay():S.tab==='board'?viewBoard():viewCustom();
+  for(const id in vals){const el=document.getElementById(id);if(el&&vals[id]!=='')el.value=vals[id]}
+  if(focus){const el=document.getElementById(focus);if(el){el.focus();if(sel&&sel[0]!=null)try{el.setSelectionRange(sel[0],sel[1])}catch(e){}}}
+  document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===S.tab?'page':'false'));
+  const mc=$('#mechip');
+  if(S.me&&S.players[S.me]){mc.hidden=false;mc.innerHTML=`<span>${pemo(S.me)}</span><span>${esc(pname(S.me))}</span>`}else mc.hidden=true;
+  const days=[...new Set([...S.pts.map(p=>p.day),dayKey(Date.now())])].sort();
+  $('#kvall').textContent='Kväll '+(days.indexOf(dayKey(Date.now()))+1)+' · '+dayLabel(dayKey(Date.now()));
+  const net=$('#net');
+  if(S.readonly){net.hidden=false;net.textContent='Databasen tar inte emot ändringar just nu. Säg till den som satte upp spelet.'}
+  else if(S.stale){net.hidden=false;net.textContent='Får ingen kontakt med servern än. Kolla nätet, sidan försöker igen av sig själv.'}
+  else net.hidden=true;
+  tick();
+}
+
+// ---------- spellogik ----------
+function poolFor(cat){
+  const custom=S.custom.map(c=>({id:'c-'+c._id,cat:'E',q:c.q,a:c.a,w:c.w||[]})).filter(c=>c.q&&c.a&&c.w.length===3);
+  if(cat==='E')return custom;
+  if(cat==='X')return BANK.filter(q=>q.cat!=='B').concat(custom);
+  return BANK.filter(q=>q.cat===cat);
+}
+
+async function startRound(){
+  const {cat,n,dur}=S.setup,pool=poolFor(cat);
+  if(!pool.length){toast(cat==='E'?'Lägg till egna frågor först, under Egna frågor.':'Inga frågor i den kategorin.');return}
+  const used=new Set(S.used);
+  let pick=shuffle(pool.filter(q=>!used.has(q.id))).slice(0,n);
+  if(pick.length<n)pick=pick.concat(shuffle(pool.filter(q=>used.has(q.id))).slice(0,n-pick.length));
+  const qs=pick.map(q=>{const o=shuffle([q.a,...q.w]);return {id:q.id,cat:q.cat,q:q.q,o,c:o.indexOf(q.a)}});
+  const ok=await write(()=>S.db.doc('game/live').set({status:'question',roundId:'r'+Date.now().toString(36),cat,qs,idx:0,qStart:Date.now(),dur,host:S.me,day:dayKey(Date.now())}));
+  if(ok)await write(()=>S.db.doc('game/used').set({ids:[...new Set([...S.used,...pick.map(q=>q.id)])]}));
+}
+
+async function answer(i){
+  const L=S.live;if(!L||L.status!=='question'||pointFor(L.roundId,L.idx,S.me))return;
+  const rem=remaining();if(rem<=0)return;
+  const q=L.qs[L.idx],correct=i===q.c,pts=correct?100+Math.round(50*rem/(L.dur*1000)):0;
+  await write(()=>S.db.doc('points/'+qKey(L.roundId,L.idx,S.me)).set({player:S.me,pts,correct,choice:i,roundId:L.roundId,idx:L.idx,day:L.day,kind:'quiz',at:Date.now()}));
+}
+
+function tick(){
+  const L=S.live;if(!L||L.status!=='question')return;
+  const rem=remaining(),key=L.roundId+'-'+L.idx;
+  const bar=$('#tbar');if(bar)bar.style.width=Math.max(0,Math.min(100,rem/(L.dur*10)))+'%';
+  const num=$('#tnum');if(num)num.textContent=Math.max(0,Math.ceil(rem/1000));
+  if(rem<=0&&S.timeoutKey!==key){S.timeoutKey=key;render();return}
+  if(isHost()&&S.revealSent!==key){
+    const ids=Object.keys(S.players),all=ids.length>0&&ids.every(p=>pointFor(L.roundId,L.idx,p));
+    if(rem<=-400||all){S.revealSent=key;write(()=>S.db.doc('game/live').update({status:'reveal'}))}
+  }
+}
+setInterval(tick,200);
+
+function onLive(){
+  const L=S.live;if(!L||L.status!=='question')return;
+  const key=L.roundId+'-'+L.idx;
+  if(key!==S.seenKey){S.seenKey=key;S.seenAt=Date.now()}
+}
+
+// ---------- klick ----------
+document.addEventListener('click',async e=>{
+  const tab=e.target.closest('[data-tab]');if(tab){S.tab=tab.dataset.tab;S.confirm=null;render();window.scrollTo(0,0);return}
+  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;
+  const act=b.dataset.act,L=S.live,db=S.db;
+  if(act==='switch'){setMe(null);S.tab='play';render();return}
+  if(act==='pick'){setMe(b.dataset.id);render();return}
+  if(act==='emo'){S.emoji=b.dataset.e;render();return}
+  if(act==='cat'){S.setup.cat=b.dataset.v;render();return}
+  if(act==='set'){S.setup[b.dataset.f]=Number(b.dataset.v);render();return}
+  if(!db)return;
+  if(act==='join'||act==='addplayer'){
+    const inp=$(act==='join'?'#jn':'#an'),name=(inp.value||'').trim();if(!name){toast('Skriv ett namn först.');inp.focus();return}
+    const id='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    if(await write(()=>db.doc('players/'+id).set({name,emoji:S.emoji,at:Date.now()}))){
+      inp.value='';if(act==='join')setMe(id);else toast(name+' är med.');render()}
+    return;
+  }
+  if(act==='start'){b.disabled=true;await startRound();return}
+  if(act==='ans'){answer(Number(b.dataset.i));return}
+  if(act==='reveal'&&L){S.revealSent=L.roundId+'-'+L.idx;write(()=>db.doc('game/live').update({status:'reveal'}));return}
+  if(act==='abort'){if(confirmed('abort'))write(()=>db.doc('game/live').update({status:'lobby'}));return}
+  if(act==='takeover'){if(confirmed('takeover'))write(()=>db.doc('game/live').update({host:S.me}));return}
+  if(act==='next'&&L){
+    if(L.idx+1<L.qs.length)write(()=>db.doc('game/live').update({status:'question',idx:L.idx+1,qStart:Date.now()}));
+    else write(()=>db.doc('game/live').update({status:'final'}));
+    return;
+  }
+  if(act==='lobby'){write(()=>db.doc('game/live').update({status:'lobby'}));return}
+  if(act==='manual'&&L){
+    const id=b.dataset.id,k=qKey(L.roundId,L.idx,id),p=S.pmap[k];
+    if(p&&p.manual)write(()=>db.doc('points/'+k).delete());
+    else if(!p)write(()=>db.doc('points/'+k).set({player:id,pts:100,correct:true,choice:L.qs[L.idx].c,manual:true,roundId:L.roundId,idx:L.idx,day:L.day,kind:'quiz',at:Date.now()}));
+    return;
+  }
+  if(act==='bonus'){
+    const pl=$('#bp').value,v=Math.round(Number($('#bv').value)),reason=($('#br').value||'').trim();
+    if(!pl||!v){toast('Välj spelare och skriv antal poäng.');return}
+    if(await write(()=>db.collection('points').add({player:pl,pts:v,kind:'bonus',reason:reason||'Bonus',day:dayKey(Date.now()),at:Date.now(),by:S.me||null}))){
+      $('#bv').value='';$('#br').value='';toast((v>0?'+':'')+v+' till '+pname(pl));render()}
+    return;
+  }
+  if(act==='delbonus'){if(confirmed('b'+b.dataset.id))write(()=>db.doc('points/'+b.dataset.id).delete());return}
+  if(act==='addq'){
+    const g=id=>($(id).value||'').trim(),q=g('#cq'),a=g('#ca'),w=[g('#cw1'),g('#cw2'),g('#cw3')];
+    if(!q||!a||w.some(x=>!x)){toast('Fyll i frågan, rätt svar och tre fel svar.');return}
+    if(new Set([a,...w].map(x=>x.toLowerCase())).size<4){toast('Alla fyra svar måste vara olika.');return}
+    if(await write(()=>db.collection('custom').add({q,a,w,by:S.me,at:Date.now()}))){['#cq','#ca','#cw1','#cw2','#cw3'].forEach(id=>$(id).value='');toast('Frågan är tillagd.');render()}
+    return;
+  }
+  if(act==='delq'){if(confirmed('q'+b.dataset.id))write(()=>db.doc('custom/'+b.dataset.id).delete());return}
+});
+
+// ---------- start ----------
+async function init(){
+  try{S.me=localStorage.getItem('fjk-me')}catch(e){}
+  if(!window.firebase||!window.FIREBASE_CONFIG){S.noDb=true;render();return}
+  firebase.initializeApp(window.FIREBASE_CONFIG);
+  const fs=firebase.firestore();
+  // Spara lokalt så att svar och poäng köas om nätet i stugan svajar
+  try{await fs.enablePersistence({synchronizeTabs:true})}catch(e){}
+  const db={doc:p=>fs.doc(p),collection:p=>fs.collection(p)};
+  S.db=db;
+  const staleT=setTimeout(()=>{S.stale=true;render()},10000);
+  const seen=(name,snap)=>{S.loaded[name]=true;if(!snap.metadata.fromCache){clearTimeout(staleT);S.stale=false}};
+  const fail=()=>{clearTimeout(staleT);S.stale=true;render()};
+  db.collection('players').onSnapshot(s=>{S.players=Object.fromEntries(s.docs.map(d=>[d.id,d.data()]));seen('players',s);render()},fail);
+  db.doc('game/live').onSnapshot(d=>{S.live=d.exists?d.data():null;seen('live',d);onLive();render()},fail);
+  db.doc('game/used').onSnapshot(d=>{S.used=d.exists?(d.data().ids||[]):[];seen('used',d);render()},fail);
+  db.collection('points').onSnapshot(s=>{S.pts=s.docs.map(d=>({...d.data(),_id:d.id}));S.pmap={};for(const p of S.pts)if(p.kind==='quiz')S.pmap[qKey(p.roundId,p.idx,p.player)]=p;seen('points',s);render()},fail);
+  db.collection('custom').onSnapshot(s=>{S.custom=s.docs.map(d=>({...d.data(),_id:d.id}));seen('custom',s);render()},fail);
+}
+render();
+init();
+</script>
+</body>
+</html>
