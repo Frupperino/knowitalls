@@ -861,7 +861,62 @@ function viewBoard(){
     <div class="row"><input id="bv" type="number" inputmode="numeric" placeholder="Poäng, t.ex. 50" style="flex:1 1 120px"><input id="br" maxlength="40" placeholder="För vad?" style="flex:2 1 160px"></div>
     <button class="primary" data-act="bonus" ${S.readonly||!ids.length?'disabled':''}>Ge poäng</button>
     ${bonus.length?`<div class="label">Senast</div><div class="log">${bonus.map(b=>`<div><span>${pemo(b.player)} ${esc(pname(b.player))} · ${esc(b.reason||'Bonus')} · ${esc(dayLabel(b.day))}</span><span class="${b.pts<0?'neg':'pos'}">${b.pts>0?'+':''}${b.pts}</span><button class="x" data-act="delbonus" data-id="${b._id}">${cLabel('b'+b._id,'Ta bort')}</button></div>`).join('')}</div>`:''}
+  </section>
+  ${viewAdmin()}`;
+}
+
+// ---------- admin ----------
+// PIN-koden hindrar att någon råkar trycka fel. Den är inget riktigt skydd: alla med länken kan skriva i databasen.
+async function pinHash(pin){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('knowitalls:'+pin));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function isAdmin(){try{return !!S.adminHash&&localStorage.getItem('kia-admin')===S.adminHash}catch(e){return false}}
+function viewAdmin(){
+  if(!S.adminHash)return `<section class="card host"><h2>Admin</h2>
+    <p class="hint">Välj en PIN-kod för den som ska kunna rätta till saker: avsluta en runda som fastnat, ta bort spelare eller nollställa poängen. Det räcker att en person gör det här.</p>
+    <input id="apin" type="password" inputmode="numeric" maxlength="8" placeholder="PIN, 4–8 siffror" autocomplete="off">
+    <button class="ghost" data-act="adminset">Spara PIN och bli admin</button></section>`;
+  if(!isAdmin())return `<section class="card host"><h2>Admin</h2>
+    <div class="row"><input id="apin" type="password" inputmode="numeric" maxlength="8" placeholder="PIN" autocomplete="off" style="flex:1 1 120px"><button class="ghost" data-act="adminunlock" style="flex:0 0 auto">Lås upp</button></div></section>`;
+  const ids=Object.keys(S.players).sort((a,b)=>pname(a).localeCompare(pname(b),'sv')),st=S.live?.status;
+  return `<section class="card host"><div class="row"><h2>Admin</h2><button class="x" data-act="adminlock" style="flex:0 0 auto">Lås</button></div>
+    ${st&&st!=='lobby'?`<div class="label">Pågående runda</div><button class="ghost" data-act="adminend">${cLabel('aend','Avsluta rundan och gå till start')}</button>`:''}
+    <div class="label">Spelare</div>
+    ${ids.length?`<div class="log">${ids.map(id=>`<div><span>${pemo(id)} ${esc(pname(id))}</span>
+      <button class="x" data-act="adminkid" data-id="${id}">${isKid(id)?'Barn → vuxen':'Vuxen → barn'}</button>
+      <button class="x" data-act="admindelp" data-id="${id}">${cLabel('ap'+id,'Ta bort')}</button></div>`).join('')}</div>`:'<p class="hint">Inga spelare.</p>'}
+    <div class="label">Nollställ</div>
+    <button class="ghost" data-act="adminresetpts">${cLabel('arp','Nollställ alla poäng (spelarna finns kvar)','Tryck igen: alla poäng försvinner')}</button>
+    <button class="ghost" data-act="adminresetall">${cLabel('ara','Rensa allt: spelare och poäng','Tryck igen: alla spelare och poäng försvinner')}</button>
+    ${S.custom.length?`<button class="ghost" data-act="adminresetq">${cLabel('arq',`Ta bort alla egna frågor (${S.custom.length})`,'Tryck igen: alla egna frågor försvinner')}</button>`:''}
+    <p class="hint">Egna frågor och PIN-koden ligger kvar när du rensar spelare och poäng.</p>
   </section>`;
+}
+// Raderar i omgångar om högst 400, Firestore tar max 500 per batch
+async function deleteDocs(paths){
+  for(let i=0;i<paths.length;i+=400){const b=S.db.batch();paths.slice(i,i+400).forEach(p=>b.delete(S.db.doc(p)));await b.commit()}
+}
+function gamePaths(){return ['game/live','game/used',...Object.keys(S.rounds).map(r=>'game/'+r)]}
+async function adminAct(act,b){
+  const db=S.db;
+  if(act==='adminset'||act==='adminunlock'){
+    const pin=($('#apin').value||'').trim();
+    if(!/^\d{4,8}$/.test(pin)){toast('PIN-koden ska vara 4–8 siffror.');return}
+    const h=await pinHash(pin);
+    if(act==='adminset'){if(!await write(()=>db.doc('game/admin').set({pin:h})))return}
+    else if(h!==S.adminHash){toast('Fel PIN-kod.');return}
+    try{localStorage.setItem('kia-admin',h)}catch(e){toast('Telefonen kan inte komma ihåg att du är admin.')}
+    $('#apin').value='';toast('Du är admin på den här telefonen.');render();return;
+  }
+  if(!isAdmin())return;
+  if(act==='adminlock'){try{localStorage.removeItem('kia-admin')}catch(e){}render();return}
+  if(act==='adminend'){if(confirmed('aend')&&S.live)await endRound('lobby');return}
+  if(act==='adminkid'){write(()=>db.doc('players/'+b.dataset.id).update({kid:!isKid(b.dataset.id)}));return}
+  if(act==='admindelp'){if(confirmed('ap'+b.dataset.id))write(()=>db.doc('players/'+b.dataset.id).delete());return}
+  if(act==='adminresetpts'){if(confirmed('arp')&&await write(()=>deleteDocs([...S.pts.map(p=>'points/'+p._id),...gamePaths()])))toast('Poängen är nollställda.');return}
+  if(act==='adminresetall'){if(confirmed('ara')&&await write(()=>deleteDocs([...S.pts.map(p=>'points/'+p._id),...gamePaths(),...Object.keys(S.players).map(id=>'players/'+id)])))toast('Allt är rensat.');return}
+  if(act==='adminresetq'){if(confirmed('arq')&&await write(()=>deleteDocs(S.custom.map(c=>'custom/'+c._id))))toast('De egna frågorna är borttagna.');return}
 }
 
 function viewCustom(){
@@ -1104,6 +1159,7 @@ document.addEventListener('click',async e=>{
     return;
   }
   if(act==='delq'){if(confirmed('q'+b.dataset.id))write(()=>db.doc('custom/'+b.dataset.id).delete());return}
+  if(act.startsWith('admin')){adminAct(act,b);return}
 });
 
 // Fotot krymps till max 900 px och ca 130 kB så att det ryms i ett Firestore-dokument
@@ -1138,7 +1194,8 @@ async function init(){
   db.collection('players').onSnapshot(s=>{S.players=Object.fromEntries(s.docs.map(d=>[d.id,d.data()]));seen('players',s);render()},fail);
   db.collection('game').onSnapshot(s=>{
     S.live=null;S.used=[];S.rounds={};
-    for(const d of s.docs){const v=d.data();if(d.id==='live')S.live=v;else if(d.id==='used')S.used=v.ids||[];else if(v.type==='round')S.rounds[d.id]=v}
+    S.adminHash=null;
+    for(const d of s.docs){const v=d.data();if(d.id==='live')S.live=v;else if(d.id==='used')S.used=v.ids||[];else if(d.id==='admin')S.adminHash=v.pin||null;else if(v.type==='round')S.rounds[d.id]=v}
     rebuild();seen('game',s);onLive();render()},fail);
   db.collection('points').onSnapshot(s=>{S.pts=s.docs.map(d=>({...d.data(),_id:d.id}));S.pmap={};for(const p of S.pts)if(p.kind==='quiz')S.pmap[qKey(p.roundId,p.idx,p.player)]=p;rebuild();seen('points',s);render()},fail);
   db.collection('custom').onSnapshot(s=>{S.custom=s.docs.map(d=>({...d.data(),_id:d.id}));seen('custom',s);render()},fail);
