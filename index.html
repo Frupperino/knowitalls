@@ -174,7 +174,7 @@ nav button[aria-current="page"]{color:var(--fg);border-top-color:var(--accent)}
   <section class="card"><h3>Kort version</h3>
     <p>Alla spelar på sin egen telefon. Alla får samma fråga samtidigt och trycker på det svar de tror är rätt. Snabbt och rätt ger mest poäng. Poängen sparas hela veckan.</p></section>
   <section class="card"><h3>Komma igång</h3><ol>
-    <li>Öppna länken och skriv ditt namn och välj ett djur. Telefonen kommer ihåg dig.</li>
+    <li>Öppna länken och skriv ditt namn och välj en ikon. Telefonen kommer ihåg dig.</li>
     <li>Välj <b>Vuxen</b> eller <b>Barn</b>. Barn får lättare frågor i samma runda.</li>
     <li>Tryck på ditt namn under <b>Vilka är med?</b> så ser alla att du spelar ikväll.</li></ol></section>
   <section class="card"><h3>En runda</h3><ol>
@@ -185,7 +185,7 @@ nav button[aria-current="page"]{color:var(--fg);border-top-color:var(--accent)}
   <section class="card"><h3>Poäng</h3><ul>
     <li>Rätt svar: <b>100 poäng</b>, plus upp till <b>50 extra</b> ju snabbare du är.</li>
     <li>Fel svar eller inget svar: 0 poäng.</li>
-    <li><b>Leden mot toppen</b>: varje 100 poäng ikväll flyttar ditt djur ett steg upp mot toppen. Leden börjar om varje kväll.</li>
+    <li><b>Leden mot toppen</b>: varje 100 poäng ikväll flyttar din ikon ett steg upp mot toppen. Leden börjar om varje kväll.</li>
     <li>En kväll räknas fram till klockan 06 nästa morgon.</li>
     <li><b>Topplista</b> visar hela veckan och varje kväll för sig. Den som har mest i slutet av veckan vinner.</li></ul></section>
   <section class="card"><h3>Mer att göra</h3><ul>
@@ -1048,7 +1048,6 @@ V3|Vad heter den del av cellen som brukar kallas cellens kraftverk?|Mitokondrien
 V3|Vad står DNA för?|Deoxiribonukleinsyra|Dinukleinsyra|Deoxinitratsyra|Dubbel nukleär aminosyra
 D3|Vilken fågel är världens snabbaste i störtdykning?|Pilgrimsfalk|Kungsörn|Tornseglare|Havsörn
 D3|Vilken fågel har störst vingbredd?|Vandringsalbatross|Kondor|Havsörn|Pelikan
-D3|Vilket djur har världens största ögon?|Jättebläckfisk|Blåval|Struts|Elefant
 D3|Hur många magar (magavdelningar) har en ko?|4|2|3|1
 D3|Vad heter en hona av ren?|Vaja|Kviga|Sugga|Hind
 D3|Vad heter en hane av ren?|Sarv|Bock|Tjur|Hjort
@@ -1063,9 +1062,6 @@ D3|Vilken är Sveriges största uggla?|Berguv|Lappuggla|Kattuggla|Hornuggla
 D3|Vilken fågel blir vit på vintern i fjällen?|Fjällripa|Tjäder|Orre|Korp
 D3|Vilken hackspett är Sveriges största?|Spillkråka|Gröngöling|Större hackspett|Tretåig hackspett
 D3|Vilket djur har randig hud under pälsen?|Tiger|Zebra|Leopard|Lejon
-D3|Vilket däggdjur kan flyga?|Fladdermus|Flygekorre|Flygfisk|Kolibri
-D3|Vilket djur lägger ägg fast det är ett däggdjur?|Näbbdjur|Känguru|Koala|Bäver
-D3|Vilket djur bär sina ungar i en pung?|Känguru|Bäver|Näbbdjur|Utter
 D3|Vad heter världens största fisk?|Valhaj|Vithaj|Blåval|Jättemanta
 D3|Vilken är världens giftigaste orm (landlevande)?|Inlandstaipan|Svart mamba|Kungskobra|Huggorm
 D3|Vilken orm är Sveriges enda giftiga?|Huggorm|Snok|Hasselsnok|Kopparödla
@@ -1080,7 +1076,8 @@ D3|Vilken val är störst av tandvalarna?|Kaskelot|Späckhuggare|Narval|Vitval
 `;
 
 const CATS = {X:'Blandat',C:'Citat',R:'Färger',F:'Fjäll & natur',S:'Sverige',G:'Geografi',H:'Historia',M:'Film, tv & musik',P:'Sport',D:'Djur',K:'Mat & dryck',V:'Vetenskap',B:'Barnkultur',E:'Familjen'};
-const EMOJI = ['🦌','🐻','🦊','🐺','🦉','🐰','🦅','🐿️','🐑','🐟','🦫','🐧'];
+// Spelarikoner, ungefär en eller två per kategori
+const EMOJI = ['⭐','🎲','💬','🎨','🏔️','⛷️','👑','🌍','🧭','🏰','⚔️','🎬','🎸','⚽','🏒','🦊','🦉','🐻','🍓','☕','🚀','🔬','🧸','🏠'];
 const LETTERS = ['A','B','C','D'];
 
 function hash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36)}
@@ -1148,7 +1145,7 @@ function viewJoin(){
     <div class="chips">${ids.map(id=>`<button class="chip" data-act="pick" data-id="${id}">${pemo(id)} ${esc(pname(id))}</button>`).join('')}</div></section>`:''}
   <section class="card"><h2>${ids.length?'Ny spelare':'Gå med i KnowItAlls'}</h2>
     <input id="jn" maxlength="20" placeholder="Ditt namn" autocomplete="off">
-    <div class="label">Välj djur</div>
+    <div class="label">Välj ikon</div>
     <div class="chips">${EMOJI.map(e=>`<button class="chip emo" data-act="emo" data-e="${e}" aria-pressed="${S.emoji===e}">${e}</button>`).join('')}</div>
     ${levelChips()}
     <button class="primary" data-act="join">Gå med</button>
