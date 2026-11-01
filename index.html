@@ -138,6 +138,13 @@ nav button{flex:1;border:0;background:transparent;padding:14px 4px 16px;font-wei
 nav button[aria-current="page"]{color:var(--fg);border-top-color:var(--accent)}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;max-width:calc(100% - 32px);z-index:6;text-align:center}
 @media (prefers-reduced-motion:reduce){.timer i{transition:none}}
+.rulesbtn{margin-left:auto;background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:600;font-size:14px;flex:none}
+.rulesbtn+.me{margin-left:0}
+#rules{position:fixed;inset:0;background:var(--bg);z-index:20;overflow-y:auto}
+#rules .wrap{padding-top:calc(12px + env(safe-area-inset-top,0px))}
+#rules ol,#rules ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+#rules p{margin:0}
+.chip.out{opacity:.55}
 </style>
 </head>
 <body>
@@ -146,6 +153,7 @@ nav button[aria-current="page"]{color:var(--fg);border-top-color:var(--accent)}
   <header>
     <div class="mark" aria-hidden="true"></div>
     <div><div class="brand">KnowItAlls</div><div class="kv" id="kvall">Kväll 1</div></div>
+    <button class="rulesbtn" data-act="rules">Regler</button>
     <button class="me" id="mechip" data-act="switch" hidden></button>
   </header>
   <div id="net" class="notice" hidden></div>
@@ -161,6 +169,33 @@ nav button[aria-current="page"]{color:var(--fg);border-top-color:var(--accent)}
   <button data-tab="custom">Egna frågor</button>
 </div></nav>
 <div id="toast" hidden></div>
+<div id="rules" hidden role="dialog" aria-modal="true" aria-labelledby="rulesh"><div class="wrap">
+  <div class="row"><h2 id="rulesh" style="flex:1 1 auto">Så spelar ni</h2><button class="ghost" data-act="rulesclose" style="flex:0 0 auto">Stäng</button></div>
+  <section class="card"><h3>Kort version</h3>
+    <p>Alla spelar på sin egen telefon. Alla får samma fråga samtidigt och trycker på det svar de tror är rätt. Snabbt och rätt ger mest poäng. Poängen sparas hela veckan.</p></section>
+  <section class="card"><h3>Komma igång</h3><ol>
+    <li>Öppna länken och skriv ditt namn och välj ett djur. Telefonen kommer ihåg dig.</li>
+    <li>Välj <b>Vuxen</b> eller <b>Barn</b>. Barn får lättare frågor i samma runda.</li>
+    <li>Tryck på ditt namn under <b>Vilka är med?</b> så ser alla att du spelar ikväll.</li></ol></section>
+  <section class="card"><h3>En runda</h3><ol>
+    <li>En person väljer kategori, antal frågor och tid, och trycker <b>Starta rundan</b>. Den personen blir <b>värd</b> och spelar också.</li>
+    <li>Frågan dyker upp på allas telefoner. Tryck på ett svar innan tiden tar slut. Man kan inte ändra sig.</li>
+    <li>När alla som är med har svarat, eller tiden är slut, visas facit.</li>
+    <li>Värden trycker <b>Nästa fråga</b> när alla är redo. Efter sista frågan visas rundans resultat.</li></ol></section>
+  <section class="card"><h3>Poäng</h3><ul>
+    <li>Rätt svar: <b>100 poäng</b>, plus upp till <b>50 extra</b> ju snabbare du är.</li>
+    <li>Fel svar eller inget svar: 0 poäng.</li>
+    <li><b>Leden mot toppen</b>: varje 100 poäng ikväll flyttar ditt djur ett steg upp mot toppen. Leden börjar om varje kväll.</li>
+    <li>En kväll räknas fram till klockan 06 nästa morgon.</li>
+    <li><b>Topplista</b> visar hela veckan och varje kväll för sig. Den som har mest i slutet av veckan vinner.</li></ul></section>
+  <section class="card"><h3>Mer att göra</h3><ul>
+    <li><b>Ge poäng</b> (under Topplista): bonuspoäng för annat ni tävlar i, som kortspel eller pulkarace. Minuspoäng går också.</li>
+    <li><b>Egna frågor</b>: hitta på frågor om familjen, gärna med foto. De kommer med i Blandat och Familjen.</li>
+    <li><b>Utan telefon?</b> Lägg till personen under Spela. Hen säger sitt svar högt och värden trycker på namnet i facit om det var rätt (100 poäng).</li>
+    <li><b>Värden försvann?</b> Någon annan trycker <b>Ta över som värd</b>.</li>
+    <li>Fel person på telefonen? Tryck på namnet uppe till höger för att byta.</li></ul></section>
+  <button class="primary" data-act="rulesclose">Nu kör vi!</button>
+</div></div>
 <div id="zoom" hidden><div class="zbar"><button data-act="zoomsize">Zooma</button><button data-act="zoomclose">Stäng</button></div><img alt="Förstorad bild"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1121,6 +1156,18 @@ function viewJoin(){
 }
 // Barn får en lättare variant av varje fråga i samma runda, vuxna en svårare
 const isKid = id => !!S.players[id]?.kid;
+// "Med ikväll" nollställs av sig själv nästa kväll. Ingen markerad = alla räknas som med
+const isIn = id => { const r=S.players[id]?.ready; return !!r && dayKey(r)===dayKey(Date.now()) };
+const activeIds = () => { const all=Object.keys(S.players),on=all.filter(isIn); return on.length?on:all };
+function markIn(id){ if(S.db&&id&&S.players[id]&&!isIn(id)) write(()=>S.db.doc('players/'+id).update({ready:Date.now()})) }
+function whoCard(){
+  const ids=Object.keys(S.players).sort((a,b)=>(isIn(b)-isIn(a))||pname(a).localeCompare(pname(b),'sv'));
+  const n=ids.filter(isIn).length;
+  return `<section class="card"><div class="row"><h2 style="flex:1 1 auto">Vilka är med?</h2><span class="kv" style="flex:0 0 auto">${n} med ikväll</span></div>
+    <div class="chips">${ids.map(id=>`<button class="chip${isIn(id)?'':' out'}" data-act="togglein" data-id="${id}" aria-pressed="${isIn(id)}">${pemo(id)} ${esc(pname(id))}${id===S.me?' <small>du</small>':''}</button>`).join('')}</div>
+    ${isIn(S.me)?'':'<button class="primary" data-act="togglein" data-id="'+S.me+'">Jag är med ikväll</button>'}
+    <p class="hint">Tryck på ett namn för att markera att personen är med. Rundan väntar bara på dem som är med.</p></section>`;
+}
 const levelChips = () => `<div class="label">Frågor</div><div class="chips">
   <button class="chip" data-act="level" data-v="0" aria-pressed="${!S.kidSel}">Vuxen</button>
   <button class="chip" data-act="level" data-v="1" aria-pressed="${!!S.kidSel}">Barn (lättare frågor)</button></div>`;
@@ -1131,7 +1178,7 @@ function viewLobby(){
     return `<button class="chip" data-act="cat" data-v="${k}" aria-pressed="${S.setup.cat===k}">${CATS[k]} <small>${left}</small></button>`};
   const opt=(f,v,l)=>`<button class="chip" data-act="set" data-f="${f}" data-v="${v}" aria-pressed="${S.setup[f]===v}">${l}</button>`;
   const tonight=dayKey(Date.now());
-  return `<section class="card"><h2>Ny runda</h2>
+  return `${whoCard()}<section class="card"><h2>Ny runda</h2>
     <div class="label">Kategori · nya frågor kvar</div>
     <div class="chips">${Object.keys(CATS).map(chip).join('')}</div>
     <div class="label">Antal frågor</div><div class="chips">${opt('n',5,'5')}${opt('n',10,'10')}${opt('n',15,'15')}</div>
@@ -1173,7 +1220,7 @@ function stim(q){
 function viewQuestion(){
   const L=S.live,q=qFor(L,L.idx,S.me),mine=pointFor(L.roundId,L.idx,S.me),rem=remaining(),out=rem<=0;
   const canAns=!mine&&!out&&S.me&&S.players[S.me]&&!S.readonly;
-  const ids=Object.keys(S.players);
+  const ids=activeIds();
   return `<section class="card">
     <div class="qmeta"><span>Fråga ${L.idx+1} av ${L.qs.length}</span><span>${esc(CATS[q.cat]||'')}</span></div>
     <div class="timer"><i id="tbar"></i></div>
@@ -1454,6 +1501,7 @@ async function answer(i){
   const rem=remaining();if(rem<=0)return;
   const q=qFor(L,L.idx,S.me),correct=i===q.c,pts=correct?100+Math.round(50*rem/(L.dur*1000)):0;
   await write(()=>S.db.doc('points/'+qKey(L.roundId,L.idx,S.me)).set({player:S.me,pts,correct,choice:i,roundId:L.roundId,idx:L.idx,day:L.day,kind:'quiz',at:Date.now()}));
+  markIn(S.me);
 }
 
 function tick(){
@@ -1463,7 +1511,7 @@ function tick(){
   const num=$('#tnum');if(num)num.textContent=Math.max(0,Math.ceil(rem/1000));
   if(rem<=0&&S.timeoutKey!==key){S.timeoutKey=key;render();return}
   if(isHost()&&S.revealSent!==key){
-    const ids=Object.keys(S.players),all=ids.length>0&&ids.every(p=>pointFor(L.roundId,L.idx,p));
+    const ids=activeIds(),all=ids.length>0&&ids.every(p=>pointFor(L.roundId,L.idx,p));
     if(rem<=-400||all){S.revealSent=key;write(()=>S.db.doc('game/live').update({status:'reveal'}))}
   }
 }
@@ -1488,6 +1536,8 @@ document.addEventListener('click',async e=>{
   if(act==='zoom'){const c=S.custom.find(x=>x._id===b.dataset.ref);if(c&&okImg(c.img)){const z=$('#zoom');z.querySelector('img').src=c.img;z.classList.remove('big');z.hidden=false}return}
   if(act==='zoomsize'){$('#zoom').classList.toggle('big');return}
   if(act==='zoomclose'){$('#zoom').hidden=true;return}
+  if(act==='rules'){const r=$('#rules');r.hidden=false;r.scrollTop=0;return}
+  if(act==='rulesclose'){$('#rules').hidden=true;return}
   if(act==='ctype'){S.ctype=b.dataset.v;render();return}
   if(act==='level'){S.kidSel=b.dataset.v==='1';render();return}
   if(act==='mylevel'&&S.db&&S.me){write(()=>S.db.doc('players/'+S.me).update({kid:!isKid(S.me)}));return}
@@ -1496,11 +1546,12 @@ document.addEventListener('click',async e=>{
   if(act==='join'||act==='addplayer'){
     const inp=$(act==='join'?'#jn':'#an'),name=(inp.value||'').trim();if(!name){toast('Skriv ett namn först.');inp.focus();return}
     const id='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    if(await write(()=>db.doc('players/'+id).set({name,emoji:S.emoji,kid:!!S.kidSel,at:Date.now()}))){
+    if(await write(()=>db.doc('players/'+id).set({name,emoji:S.emoji,kid:!!S.kidSel,at:Date.now(),ready:Date.now()}))){
       inp.value='';if(act==='join')setMe(id);else toast(name+' är med.');render()}
     return;
   }
-  if(act==='start'){b.disabled=true;await startRound();return}
+  if(act==='start'){b.disabled=true;markIn(S.me);await startRound();return}
+  if(act==='togglein'){const id=b.dataset.id;if(S.players[id])write(()=>db.doc('players/'+id).update({ready:isIn(id)?0:Date.now()}));return}
   if(act==='ans'){answer(Number(b.dataset.i));return}
   if(act==='reveal'&&L){S.revealSent=L.roundId+'-'+L.idx;write(()=>db.doc('game/live').update({status:'reveal'}));return}
   if(act==='abort'){if(confirmed('abort'))endRound('lobby');return}

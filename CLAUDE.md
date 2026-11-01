@@ -6,6 +6,7 @@ Familjefrågesport för telefonen (webbapp, läggs till på hemskärmen). Poäng
 - Svårighet: siffra efter kategoribokstaven i `RAW` (`F1` lätt/barn, `F2` medel, `F3` svår). Utan siffra: `B` = 1, övriga = 2. Barnkultur (`B`) kan vara svår, svårighet och ämne är oberoende.
 - Spelare med `kid: true` får en egen variant av varje fråga (`qs[i].kid`), plockad bland lätta frågor. Vuxna får ca 60 % svåra. Använd alltid `qFor(L,i,spelare)` för att läsa en fråga.
 - Frågetyper i `RAW`: `kat|fråga|rätt|fel|fel|fel` (text), `kat:q|fråga|citat|rätt|…` (citat), `kat:p|fråga|#hex,#hex|rätt|…` (färgpalett). Fotofrågor finns bara som egna frågor (`custom.img`, jpeg-dataURL ≤ ~130 kB) och refereras med `ref` i rundan.
+- "Vilka är med?": `players.ready` (tidsstämpel) gäller bara samma kväll. Rundan väntar bara på de som är med (`activeIds`); är ingen markerad räknas alla. Regler-knappen i headern öppnar `#rules`.
 - Spelbrädet "Leden mot toppen": 36 rutor, 1 ruta per 100 poäng ikväll, döljs under pågående fråga.
 - `firebase-config.js` – webbappens Firebase-config (inte hemlig).
 - `firestore.rules` – klistras in under Firestore > Regler i Firebase-konsolen. Öppet t.o.m. 2026-12-15.
