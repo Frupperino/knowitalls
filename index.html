@@ -248,7 +248,14 @@ input[type="range"]::-moz-range-thumb{
 .stage-media img{display:inline-block;width:auto;max-width:100%;max-height:46vh;height:auto;border-radius:16px}
 .stage-media video{display:block;width:100%;max-height:46vh;height:auto;background:#14110e;border-radius:16px}
 .replay{position:absolute;right:10px;bottom:10px;border:0;border-radius:999px;background:rgba(255,253,248,.94);padding:8px 12px;font-weight:700}
-.credit{margin:0 0 10px;color:var(--muted);font-size:12px}
+.notice{background:#fdeceb;color:#9f2218;border-radius:12px;padding:10px 12px;margin:0 0 10px}
+.codebig{font-family:var(--serif);font-size:clamp(42px,10vw,68px);letter-spacing:.18em;text-align:center;margin:4px 0 0}
+.lobby{list-style:none;margin:12px 0;padding:0;display:flex;flex-direction:column;gap:8px;max-height:min(46vh,480px);overflow:auto}
+.lobby li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:#f6f0e6}
+.lobby b{display:flex;align-items:center;gap:8px;min-width:0}
+.hostbadge{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
+.progressline{margin:0 0 12px}
+.progressline .chips{margin-top:8px}
 .podium-wrap{max-height:min(52vh,520px);overflow:auto;margin:8px 0 12px}
 .delta{font-family:var(--serif);font-size:clamp(52px,10vw,76px);letter-spacing:-.045em;line-height:.9;margin:6px 0;font-variant-numeric:tabular-nums}
 .goodc{color:var(--good)} .midc{color:var(--gold)} .badc{color:var(--bad)}
@@ -326,8 +333,12 @@ input[type="range"]::-moz-range-thumb{
 <div id="app"></div>
 <div id="live" class="sr" aria-live="polite"></div>
 <noscript><p style="padding:24px">KnowItAlls behöver JavaScript, men ingen server och ingen inloggning.</p></noscript>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script src="questions.js"></script>
 <script src="logic.js"></script>
+<script src="online.js"></script>
 <script src="game.js"></script>
 </body>
 </html>

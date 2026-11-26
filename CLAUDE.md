@@ -9,5 +9,6 @@ Frågesport på svenska, en statisk webbapp som kan ligga på GitHub Pages. Inge
 - `media/` är lokala bilder och korta mp4-klipp. Inga externa länkar. Se `media/CREDITS.txt`.
 - `check-questions.mjs` kollar att banken och poängen hänger ihop: `node check-questions.mjs`.
 - Rekord för en blandad tiorunda sparas i `localStorage` under `kia-studio-v1`.
-- `firebase-config.js` och `firestore.rules` hör till den äldre familjeveckan och används inte av spelet.
+- `online.js` sköter rummet i Firestore. Samlingarna `game` och `players` används, som `firestore.rules` redan tillåter till 15 december 2026. Reglerna behöver inte publiceras om igen för det här.
+- `firebase-config.js` är webbappens config. `firestore.rules` är oförändrade.
 - Lokal test: `python3 -m http.server 8765`.

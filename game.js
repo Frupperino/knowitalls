@@ -41,6 +41,18 @@
     newRecord: false,
     celebrated: false,
     wanted: 10,
+    online: {
+      code: "",
+      playerId: "",
+      name: "",
+      error: "",
+      status: "",
+      room: null,
+      roster: [],
+      sig: "",
+      revealing: false,
+      draftQi: null,
+    },
   };
 
   let audioCtx = null;
@@ -143,7 +155,7 @@
   }
 
   function header(opts) {
-    const inRound = S.screen === "play" || S.screen === "feedback" || S.screen === "handoff";
+    const inRound = S.screen === "play" || S.screen === "feedback" || S.screen === "handoff" || S.screen === "online-lobby" || S.screen === "online-wait";
     const brand = inRound
       ? '<div class="brand"><span class="mark" aria-hidden="true"></span><span>KnowItAlls</span></div>'
       : '<button type="button" class="brand" data-act="home"><span class="mark" aria-hidden="true"></span><span>KnowItAlls</span></button>';
@@ -151,7 +163,7 @@
       ? '<div class="scorepill"><b>' + KIA.fmtInt(opts.score) + '</b><span>poäng</span></div>'
       : "";
     const who = opts && opts.who ? '<div class="who">' + esc(opts.who) + "</div>" : "";
-    const abort = inRound ? '<button type="button" class="textbtn" data-act="abort">Avbryt</button>' : "";
+    const abort = inRound ? '<button type="button" class="textbtn" data-act="abort">' + (S.screen === "online-lobby" ? "Lämna" : "Avbryt") + "</button>" : "";
     return '<header class="top">' + brand + who + '<div class="top-gap"></div>' + score + abort +
       '<button type="button" class="iconbtn' + (stats.sound ? " on" : "") + '" data-act="sound" aria-pressed="' + stats.sound + '" aria-label="' + (stats.sound ? "Stäng av ljud" : "Sätt på ljud") + '">' + iconSound(stats.sound) + "</button></header>";
   }
@@ -177,6 +189,10 @@
     else if (S.screen === "play") html = viewPlay();
     else if (S.screen === "feedback") html = viewFeedback();
     else if (S.screen === "end") html = viewEnd();
+    else if (S.screen === "online-create") html = viewOnlineCreate();
+    else if (S.screen === "online-join") html = viewOnlineJoin();
+    else if (S.screen === "online-lobby") html = viewOnlineLobby();
+    else if (S.screen === "online-wait") html = viewOnlineWait();
     app.innerHTML = html;
     if (scroll) window.scrollTo(0, 0);
     const race = document.querySelector(".race-wrap");
@@ -203,7 +219,7 @@
       record = '<p class="fine">Inget rekord än. En blandad tiorunda skriver in dig.</p>';
     }
     return shell(
-      '<div class="home"><section class="hero"><p class="kicker">Frågesport på svenska</p><h1>Vem kan mest ikväll?</h1><p class="lede">Glid fram till rätt år, lägg saker i ordning, avslöja bluffen eller gissa vad bilden och klippet är.</p>' + record + '<p class="fine"><button type="button" class="linkish" data-act="help">Så funkar det</button></p></section><section><div class="modes"><button type="button" class="mode solo" data-act="solo"><small>En spelare</small><strong>Solo</strong><span>En runda, ett rekord, ingen att skylla på.</span></button><button type="button" class="mode" data-act="party"><small>Samma telefon</small><strong>Sällskap</strong><span>Skicka luren. Så många ni är.</span></button></div><div class="mechs" style="margin-top:12px">' + tiles + '</div><p class="fine">Poäng och rekord stannar i den här telefonen. ' + BANK.length + " frågor i leken.</p></section></div>"
+      '<div class="home"><section class="hero"><p class="kicker">Frågesport på svenska</p><h1>Vem kan mest ikväll?</h1><p class="lede">Glid fram till rätt år, lägg saker i ordning, avslöja bluffen eller gissa vad bilden och klippet är.</p>' + record + '<p class="fine"><button type="button" class="linkish" data-act="help">Så funkar det</button> · <button type="button" class="linkish" data-act="online-join">Har du en kod?</button></p></section><section><div class="modes"><button type="button" class="mode solo" data-act="solo"><small>En spelare</small><strong>Solo</strong><span>En runda, ett rekord, ingen att skylla på.</span></button><button type="button" class="mode" data-act="party"><small>Samma telefon</small><strong>Sällskap</strong><span>Skicka luren. Så många ni är.</span></button><button type="button" class="mode" data-act="online"><small>Egna enheter</small><strong>Spela ihop</strong><span>Ett rum, en länk. Alla svarar på sin telefon eller dator.</span></button></div><div class="mechs" style="margin-top:12px">' + tiles + '</div><p class="fine">Poäng och rekord stannar i den här telefonen. ' + BANK.length + " frågor i leken.</p></section></div>"
     );
   }
 
@@ -264,7 +280,7 @@
       ["Satsa", "På udda fågeln, sant eller bluff och bildfrågor väljer du insats innan du låser. Försiktig ger 400, Kaxig ger 800. All-in ger 1 200, men kostar 300 om du har fel. Poängen kan inte gå under noll."],
       ["Svit", "Håller du i gång sviten ger den tredje träffen ×1,5 och varje träff därefter ×2. En träff är ett rätt svar, eller minst 500 poäng på en glidare eller en ordning. En miss nollar sviten. I sällskap har var och en sin egen."],
       ["Bild och klipp", "En stillbild eller ett kort, tyst klipp. Det spelas upp direkt i sidan, och Spela igen startar om. Satsa och välj vad du tror att du ser."],
-      ["Solo och sällskap", "Solo är fem, tio eller femton frågor. Rekordet sparas för en blandad tiorunda, i den här telefonen. I sällskap lägger ni till så många spelare ni är och väljer en, två eller tre frågor var. Frågan döljs tills den som ska svara är redo."],
+      ["Solo och sällskap", "Solo är fem, tio eller femton frågor. Rekordet sparas för en blandad tiorunda, i den här telefonen. I sällskap lägger ni till så många spelare ni är och väljer en, två eller tre frågor var. Spela ihop ger ett rum och en länk, så var och en svarar på sin egen telefon eller dator."],
     ];
     return shell(
       '<article class="card narrow help"><p class="kicker">Regler</p><h2>Så funkar det</h2>' +
@@ -289,7 +305,7 @@
   function viewPlay() {
     const entry = cur();
     const q = entry.q;
-    const p = S.players[entry.pi];
+    const p = activePlayer();
     const mult = KIA.multFor(p.streak);
     const svit = p.streak > 0
       ? '<div class="svit' + (mult > 1 ? " hot" : "") + '">Svit ' + p.streak + (mult > 1 ? " · ×" + fmtMult(mult) : "") + "</div>"
@@ -309,9 +325,11 @@
       '<h2 class="q">' + esc(headline) + "</h2>" +
       '<p class="hint">' + esc(playHint(q)) + "</p>" +
       body +
-      '<div class="lockbar"><button type="button" class="primary" data-act="lock"' + (ready ? "" : " disabled") + ">Lås in</button>" +
+      '<div class="lockbar"><button type="button" class="primary" data-act="lock"' + (ready ? "" : " disabled") + ">" + (S.mode === "online" ? "Skicka svar" : "Lås in") + "</button>" +
+      (S.mode === "online" && isHost() ? '<button type="button" class="ghost" data-act="reveal">Visa facit ändå</button>' : "") +
+      onlineProgress() +
       '<p class="keys">' + esc(keysHint(q)) + "</p></div></article>",
-      { score: p.score, who: S.mode === "party" ? p.name : "" }
+      { score: p.score, who: S.mode === "party" || S.mode === "online" ? p.name : "" }
     );
   }
 
@@ -333,8 +351,10 @@ function keysHint(q) {
 }
 
   function scoreStrip() {
-    if (S.mode !== "party" || S.players.length < 2) return "";
-    const here = cur() ? cur().pi : -1;
+    if ((S.mode !== "party" && S.mode !== "online") || S.players.length < 2) return "";
+    const here = S.mode === "online"
+      ? S.players.findIndex(function (p) { return p.id === S.online.playerId; })
+      : (cur() ? cur().pi : -1);
     return '<div class="strip" aria-label="Ställning">' + S.players.map((p, i) =>
       '<span class="' + (i === here ? "up" : "") + '"><i class="pdot" style="background:' + p.color + '"></i>' + esc(p.name) + "<b>" + KIA.fmtInt(p.score) + "</b></span>"
     ).join("") + "</div>";
@@ -355,7 +375,7 @@ function keysHint(q) {
 
   function mediaBody(entry) {
     const q = entry.q;
-    const items = entry.mediaOrder.map((id) => q.choices.find((choice) => choice.id === id));
+    const items = (entry.mediaOrder || q.choices.map(function (choice) { return choice.id; })).map((id) => q.choices.find((choice) => choice.id === id)).filter(Boolean);
     const choices = items.map((item, i) =>
       '<button type="button" class="choice" data-act="media" data-v="' + esc(item.id) + '" aria-pressed="' + (S.selected === item.id) + '">' + (i + 1) + ". " + esc(item.label) + "</button>"
     ).join("");
@@ -371,7 +391,8 @@ function keysHint(q) {
 
   function orderBody(entry) {
     const used = new Set(S.placed.filter(Boolean));
-    const pool = entry.pool.filter((label) => !used.has(label));
+    const poolSource = entry.pool || q.items.slice();
+    const pool = poolSource.filter((label) => !used.has(label));
     const slots = S.placed.map((label, i) => {
       const inner = label
         ? '<button type="button" data-chip="' + esc(label) + '">' + esc(label) + "</button>"
@@ -384,7 +405,7 @@ function keysHint(q) {
 
   function oddBody(entry) {
     const q = entry.q;
-    const items = entry.oddOrder.map((id) => q.items.find((item) => item.id === id));
+    const items = (entry.oddOrder || q.items.map(function (item) { return item.id; })).map((id) => q.items.find((item) => item.id === id)).filter(Boolean);
     const choices = items.map((item, i) =>
       '<button type="button" class="choice" data-act="odd" data-v="' + esc(item.id) + '" aria-pressed="' + (S.selected === item.id) + '">' + (i + 1) + ". " + esc(item.label) + "</button>"
     ).join("");
@@ -406,24 +427,34 @@ function keysHint(q) {
   }
 
   function viewFeedback() {
-    const L = S.last;
-    const p = S.players[cur().pi];
+    const L = S.last || { title: "", tone: "bad", detail: "", extra: "", delta: 0, raw: 0, base: 0, mult: 1, explain: "" };
+    const p = activePlayer();
     const tone = L.tone === "good" ? "goodc" : L.tone === "mid" ? "midc" : "badc";
     const sign = L.delta > 0 ? "+" : "";
     let extraNote = "";
     if (L.mult > 1 && L.base > 0) extraNote += " Svit ×" + fmtMult(L.mult) + ".";
     if (L.raw < L.delta) extraNote += " Poängen kan inte gå under noll.";
     const last = S.di + 1 >= S.deck.length;
-    const nextLabel = last ? "Se resultatet" : S.mode === "party" ? "Nästa spelare" : "Nästa fråga";
+    let nextBtn = "";
+    if (S.mode === "online") {
+      if (isHost()) {
+        nextBtn = '<button type="button" class="primary" data-act="next">' + (last ? "Se resultatet" : "Nästa fråga") + "</button>";
+      } else {
+        nextBtn = '<p class="hint">Värden tar fram nästa fråga.</p>' + onlineProgress();
+      }
+    } else {
+      const nextLabel = last ? "Se resultatet" : S.mode === "party" ? "Nästa spelare" : "Nästa fråga";
+      nextBtn = '<button type="button" class="primary" data-act="next">' + nextLabel + "</button>";
+    }
     return shell(
       '<article class="card play fb ' + L.tone + '">' + segs() + scoreStrip() +
       '<p class="kicker">' + esc(L.title) + "</p>" +
       '<p class="delta ' + tone + '">' + sign + KIA.fmtInt(L.delta) + "</p>" +
       '<p>' + esc(L.detail) + esc(extraNote) + "</p>" +
-      L.extra +
-      '<div class="note"><b>Visste du att</b>' + esc(L.explain.replace(/^Visste du att\s*/, "")) + "</div>" +
-      '<button type="button" class="primary" data-act="next">' + nextLabel + "</button></article>",
-      { score: p.score, who: S.mode === "party" ? p.name : "" }
+      (L.extra || "") +
+      '<div class="note"><b>Visste du att</b>' + esc((L.explain || "").replace(/^Visste du att\s*/, "")) + "</div>" +
+      nextBtn + "</article>",
+      { score: p.score, who: S.mode === "party" || S.mode === "online" ? p.name : "" }
     );
   }
 
@@ -441,6 +472,7 @@ function keysHint(q) {
   }
 
   function viewEnd() {
+    if (S.mode === "online") return shell(onlineEnd(), { score: activePlayer().score, who: activePlayer().name });
     if (S.mode === "party") return shell(partyEnd());
     const n = S.deck.length || 1;
     const score = S.players[0].score;
@@ -550,84 +582,34 @@ function keysHint(q) {
 
   function lock() {
     if (S.screen !== "play" || S.locked || !canLock()) return;
+    if (S.mode === "online") { submitOnline(); return; }
     S.locked = true;
     const entry = cur();
     const q = entry.q;
     const player = S.players[entry.pi];
-    const mult = KIA.multFor(player.streak);
-    let base = 0;
-    let correct = false;
-    let title = "";
-    let tone = "bad";
-    let detail = "";
+    const sub = { guess: S.guess, placed: S.placed.slice(), selected: S.selected, wager: S.wager };
+    const g = KIA.gradeAnswer(q, sub, player.streak);
     let extra = "";
-    let penalty = 0;
-
-    if (q.type === "slider") {
-      const guess = KIA.snap(q, S.guess);
-      S.guess = guess;
-      base = KIA.sliderScore(q, guess);
-      correct = base >= 500;
-      title = base >= 1000 && guess === q.answer ? "Mitt i prick" : base >= 1000 ? "Så gott som mitt i" : base >= 700 ? "Tätt inpå" : base >= 400 ? "I närheten" : base > 0 ? "En bit bort" : "Långt från facit";
-      tone = base >= 750 ? "good" : base >= 400 ? "mid" : "bad";
-      detail = "Du lade " + KIA.withUnit(q, guess) + ". Facit är " + KIA.withUnit(q, q.answer) + ".";
-      extra = sliderCompare(q, guess);
-    } else if (q.type === "order") {
-      const hits = S.placed.filter((label, i) => label === q.items[i]).length;
-      base = hits * 250;
-      correct = base >= 500;
-      title = hits === 4 ? "Hela raden stämmer" : hits === 3 ? "Tre på rätt plats" : hits === 2 ? "Halvvägs" : hits === 1 ? "En satt rätt" : "Ingen på rätt plats";
-      tone = hits === 4 ? "good" : hits >= 2 ? "mid" : "bad";
-      detail = hits + " av 4 satt på rätt plats.";
-      extra = orderCompare(q.items, S.placed);
-    } else {
-      const w = KIA.WAGERS[S.wager];
-      if (q.type === "odd") {
-        correct = S.selected === q.odd;
-        const picked = q.items.find((item) => item.id === S.selected);
-        const right = q.items.find((item) => item.id === q.odd);
-        detail = correct
-          ? "Du plockade ut " + picked.label + "."
-          : "Du valde " + picked.label + ". Udda fågeln var " + right.label + ".";
-      } else if (q.type === "media") {
-        correct = S.selected === q.answer;
-        const picked = q.choices.find((choice) => choice.id === S.selected);
-        const right = q.choices.find((choice) => choice.id === q.answer);
-        detail = correct
-          ? "Du svarade " + picked.label + "."
-          : "Du svarade " + picked.label + ". Rätt var " + right.label + ".";
-        extra = mediaFigure(q);
-      } else {
-        correct = (S.selected === "sant") === !!q.answer;
-        detail = q.answer ? "Påståendet stämmer." : "Påståendet var en bluff.";
-      }
-      base = correct ? w.win : 0;
-      penalty = correct ? 0 : w.lose;
-      title = correct ? (S.wager === "allin" ? "All-in höll" : "Rätt") : (S.wager === "allin" ? "All-in sprack" : "Inte den här gången");
-      tone = correct ? "good" : "bad";
-    }
-
-    const raw = Math.round(base * mult) + penalty;
+    if (q.type === "slider") extra = sliderCompare(q, KIA.snap(q, S.guess));
+    else if (q.type === "order") extra = orderCompare(q.items, S.placed);
+    else if (q.type === "media") extra = mediaFigure(q);
     const before = player.score;
-    player.score = Math.max(0, before + raw);
+    player.score = Math.max(0, before + g.raw);
     const delta = player.score - before;
-    const hit = KIA.isHit(q.type, base, correct);
-    if (hit) player.streak += 1;
-    else player.streak = 0;
-
-    S.last = { title: title, tone: tone, detail: detail, extra: extra, delta: delta, raw: raw, base: base, mult: mult, explain: q.explain, streak: player.streak };
+    player.streak = g.newStreak;
+    S.last = { title: g.title, tone: g.tone, detail: g.detail, extra: extra, delta: delta, raw: g.raw, base: g.base, mult: g.mult, explain: q.explain, streak: player.streak };
     S.log.push({
       pi: entry.pi,
       type: q.type,
       label: q.type === "bluff" ? q.claim : q.q,
       delta: delta,
-      tone: tone,
+      tone: g.tone,
     });
     S.screen = "feedback";
-    if (tone === "good") chord([523, 659, 784]);
-    else if (tone === "mid") chord([466, 587]);
+    if (g.tone === "good") chord([523, 659, 784]);
+    else if (g.tone === "mid") chord([466, 587]);
     else beep(180, 0.16, "triangle", 0.03);
-    if (hit && player.streak >= 3) setTimeout(() => chord([880, 1175]), 220);
+    if (g.hit && player.streak >= 3) setTimeout(() => chord([880, 1175]), 220);
     render({ scroll: true });
   }
 
@@ -770,6 +752,8 @@ function keysHint(q) {
       return;
     }
     if (act === "home") {
+      leaveOnline(false);
+      S.mode = "solo";
       S.screen = "home";
       render({ scroll: true });
       return;
@@ -825,7 +809,7 @@ function keysHint(q) {
     }
     if (act === "media") { S.selected = el.dataset.v; beep(600, 0.03, "sine", 0.02); render(); return; }
     if (act === "start" || act === "again") {
-      if (act === "again") { /* behåll upplägget */ }
+      if (S.mode === "online") { beginOnlineRound(); return; }
       startGame();
       return;
     }
@@ -835,8 +819,14 @@ function keysHint(q) {
       return;
     }
     if (act === "lock") { lock(); return; }
-    if (act === "next") { next(); return; }
-    if (act === "abort") {
+    if (act === "next") {
+      if (S.mode === "online") { hostAdvance(); return; }
+      next();
+      return;
+    }
+    if (act === "abort" || act === "leave") {
+      if (S.mode === "online") leaveOnline(true);
+      S.mode = "solo";
       S.screen = "home";
       render({ scroll: true });
       return;
@@ -851,6 +841,25 @@ function keysHint(q) {
     if (act === "wager") { S.wager = el.dataset.v; render(); return; }
     if (act === "odd") { S.selected = el.dataset.v; beep(600, 0.03, "sine", 0.02); render(); return; }
     if (act === "side") { S.selected = el.dataset.v; beep(600, 0.03, "sine", 0.02); render(); return; }
+    if (act === "online") {
+      S.mode = "online";
+      S.online.error = "";
+      S.screen = "online-create";
+      render({ scroll: true });
+      return;
+    }
+    if (act === "online-join") {
+      S.mode = "online";
+      S.online.error = "";
+      S.screen = "online-join";
+      render({ scroll: true });
+      return;
+    }
+    if (act === "create-room") { createOnlineRoom(); return; }
+    if (act === "join-room") { joinOnlineRoom(); return; }
+    if (act === "copy-link") { copyInvite(); return; }
+    if (act === "share-link") { shareInvite(); return; }
+    if (act === "reveal") { forceReveal(); return; }
   }
 
   document.addEventListener("click", (e) => {
@@ -864,6 +873,8 @@ function keysHint(q) {
 
   document.addEventListener("input", (e) => {
     const t = e.target;
+    if (t && t.dataset && t.dataset.onlinename != null) { S.online.name = t.value; return; }
+    if (t && t.dataset && t.dataset.roomcode != null) { S.online.code = t.value.toUpperCase(); return; }
     if (t && t.dataset && t.dataset.namei != null) {
       S.names[Number(t.dataset.namei)] = t.value;
       return;
@@ -931,6 +942,7 @@ function keysHint(q) {
     }
     if (S.screen === "feedback" && e.key === "Enter") {
       e.preventDefault();
+      if (S.mode === "online") { if (isHost()) hostAdvance(); return; }
       next();
       return;
     }
@@ -949,5 +961,496 @@ function keysHint(q) {
     }
   });
 
+  let net = null;
+  const IDENT = "kia-online";
+
+  function identLoad() {
+    try { return JSON.parse(localStorage.getItem(IDENT) || "{}"); }
+    catch (e) { return {}; }
+  }
+  function identSave() {
+    try {
+      localStorage.setItem(IDENT, JSON.stringify({
+        playerId: S.online.playerId,
+        name: S.online.name,
+        room: S.online.code,
+      }));
+    } catch (e) { /* privat läge */ }
+  }
+  function ensurePlayerId() {
+    if (S.online.playerId) return S.online.playerId;
+    const saved = identLoad();
+    S.online.playerId = saved.playerId || ("s" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36));
+    if (!S.online.name && saved.name) S.online.name = saved.name;
+    identSave();
+    return S.online.playerId;
+  }
+  function netApi() {
+    if (net) return net;
+    net = window.KIAOnline ? window.KIAOnline.connect() : null;
+    return net;
+  }
+  function inviteUrl(code) {
+    const url = new URL(location.href);
+    url.searchParams.set("rum", code);
+    url.hash = "";
+    return url.toString();
+  }
+  function isHost() {
+    return !!(S.online.room && S.online.room.hostId === S.online.playerId);
+  }
+  function isElector() {
+    const ids = orderedRoster().map(function (p) { return p.id; }).filter(Boolean).sort();
+    return !!ids.length && ids[0] === S.online.playerId;
+  }
+  function activePlayer() {
+    if (S.mode === "online") {
+      return S.players.find(function (p) { return p.id === S.online.playerId; }) || S.players[0] || { name: "", score: 0, streak: 0, color: "#333", id: "" };
+    }
+    const entry = cur();
+    return (entry && S.players[entry.pi]) || S.players[0] || { name: "Du", score: 0, streak: 0, color: playerColor(0) };
+  }
+  function orderedRoster() {
+    const ids = (S.online.room && S.online.room.playerIds) || [];
+    return S.online.roster.slice().sort(function (a, b) {
+      const ia = ids.indexOf(a.id);
+      const ib = ids.indexOf(b.id);
+      return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
+    });
+  }
+  function syncOnlineModels() {
+    const room = S.online.room;
+    if (!room) return;
+    const roster = orderedRoster();
+    S.players = roster.map(function (p, i) {
+      return {
+        id: p.id,
+        name: p.name || "Spelare",
+        score: p.score || 0,
+        streak: p.streak || 0,
+        color: playerColor(i),
+        host: p.id === room.hostId,
+        answeredQi: typeof p.answeredQi === "number" ? p.answeredQi : -1,
+        answer: p.answer || null,
+      };
+    });
+    S.deck = (room.qIds || []).map(function (id) {
+      const q = BANK.find(function (item) { return item.id === id; });
+      if (!q) return null;
+      const prep = (room.preps && room.preps[id]) || {};
+      return { q: q, pi: 0, pool: prep.pool, oddOrder: prep.oddOrder, mediaOrder: prep.mediaOrder };
+    }).filter(Boolean);
+    S.di = Math.max(0, Math.min(room.qi || 0, Math.max(0, S.deck.length - 1)));
+    S.mode = "online";
+  }
+  function onlineSig() {
+    const room = S.online.room || {};
+    const qi = room.qi || 0;
+    const answered = S.online.roster.filter(function (p) { return p.answeredQi === qi; }).length;
+    const scores = orderedRoster().map(function (p) { return (p.score || 0) + ":" + (p.answeredQi || -1); }).join(",");
+    return [room.phase, qi, (room.qIds || []).join("."), S.online.roster.length, answered, scores].join("|");
+  }
+  function allAnswered() {
+    const room = S.online.room;
+    if (!room || !S.online.roster.length) return false;
+    const qi = room.qi || 0;
+    return S.online.roster.every(function (p) { return p.answeredQi === qi; });
+  }
+  function resetDraft() {
+    const entry = cur();
+    const q = entry && entry.q;
+    S.wager = "lagom";
+    S.selected = null;
+    S.placed = [null, null, null, null];
+    S.locked = false;
+    S.guess = q && q.type === "slider" ? KIA.snap(q, q.start) : null;
+    S.online.draftQi = S.online.room ? S.online.room.qi : null;
+  }
+  function feedbackExtra(q, sub) {
+    if (!q || !sub) return "";
+    if (q.type === "slider") return sliderCompare(q, KIA.snap(q, sub.guess));
+    if (q.type === "order") return orderCompare(q.items, sub.placed || []);
+    if (q.type === "media") return mediaFigure(q);
+    return "";
+  }
+  function buildOnlineFeedback() {
+    const room = S.online.room;
+    const entry = cur();
+    if (!room || !entry) return;
+    const me = S.players.find(function (p) { return p.id === S.online.playerId; });
+    const sub = me && me.answer && me.answer.qi === room.qi ? me.answer : null;
+    const beforeStreak = sub && typeof sub.streakBefore === "number" ? sub.streakBefore : 0;
+    const g = KIA.gradeAnswer(entry.q, sub, beforeStreak);
+    const before = me ? Math.max(0, (me.score || 0) - g.raw) : 0;
+    S.last = {
+      title: g.title,
+      tone: g.tone,
+      detail: g.detail,
+      extra: feedbackExtra(entry.q, sub),
+      delta: me ? me.score - before : 0,
+      raw: g.raw,
+      base: g.base,
+      mult: g.mult,
+      explain: entry.q.explain,
+      streak: me ? me.streak : 0,
+    };
+    if (S.online.soundedQi !== room.qi) {
+      S.online.soundedQi = room.qi;
+      if (g.tone === "good") chord([523, 659, 784]);
+      else if (g.tone === "mid") chord([466, 587]);
+      else beep(180, 0.16, "triangle", 0.03);
+    }
+  }
+  function applyOnlineScreen() {
+    const room = S.online.room;
+    if (!room) return;
+    syncOnlineModels();
+    if (room.phase === "lobby") S.screen = "online-lobby";
+    else if (room.phase === "play") {
+      const me = S.players.find(function (p) { return p.id === S.online.playerId; });
+      if (me && me.answeredQi === room.qi) S.screen = "online-wait";
+      else {
+        if (S.online.draftQi !== room.qi) resetDraft();
+        S.screen = "play";
+      }
+    } else if (room.phase === "reveal") {
+      buildOnlineFeedback();
+      S.screen = "feedback";
+    } else if (room.phase === "end") {
+      S.screen = "end";
+    }
+  }
+  function cloudUpdate(room, roster) {
+    S.online.room = room;
+    S.online.roster = roster || [];
+    S.online.error = "";
+    S.online.status = "";
+    const sig = onlineSig();
+    const prevScreen = S.screen;
+    const prevQi = S.online.seenQi;
+    applyOnlineScreen();
+    const structural = S.screen !== prevScreen || (S.online.room && S.online.room.qi) !== prevQi;
+    S.online.seenQi = S.online.room ? S.online.room.qi : 0;
+    if (sig === S.online.sig && !structural) return;
+    S.online.sig = sig;
+    if (structural || S.screen !== "play") render({ scroll: structural });
+    else {
+      const box = document.getElementById("liveprogress");
+      if (box) box.innerHTML = onlineProgressInner();
+      else render();
+    }
+    if (S.online.room && S.online.room.phase === "play" && allAnswered() && !S.online.revealing && isElector()) {
+      S.online.revealing = true;
+      forceReveal().finally(function () { S.online.revealing = false; });
+    }
+  }
+  function listenOnline(code) {
+    const api = netApi();
+    if (!api) { S.online.error = "Kunde inte nå Firebase."; render(); return; }
+    api.listen(code, cloudUpdate, function (message) {
+      S.online.error = message;
+      if (S.screen === "online-join" || S.screen === "online-create") render();
+    });
+  }
+  function leaveOnline(remove) {
+    const api = net;
+    const code = S.online.code;
+    const id = S.online.playerId;
+    if (api) {
+      api.stop();
+      if (remove && code && id) api.leave(code, id).catch(function () {});
+    }
+    if (remove) {
+      S.online.code = "";
+      try {
+        const url = new URL(location.href);
+        url.searchParams.delete("rum");
+        history.replaceState({}, "", url.pathname + url.search);
+      } catch (e) { /* ingen historik */ }
+      identSave();
+    }
+  }
+  async function createOnlineRoom() {
+    const name = String(S.online.name || "").trim().slice(0, 18);
+    if (!name) { S.online.error = "Skriv ditt namn först."; render(); return; }
+    const api = netApi();
+    if (!api) { S.online.error = "Kunde inte nå Firebase."; render(); return; }
+    S.online.error = "";
+    S.online.status = "Öppnar rummet…";
+    render();
+    try {
+      ensurePlayerId();
+      const code = await api.createRoom({
+        playerId: S.online.playerId,
+        name: name,
+        length: S.length,
+        cat: S.cat,
+        type: S.type,
+      });
+      S.online.code = code;
+      S.online.name = name;
+      identSave();
+      const url = new URL(location.href);
+      url.searchParams.set("rum", code);
+      history.replaceState({}, "", url.pathname + url.search);
+      listenOnline(code);
+    } catch (err) {
+      S.online.status = "";
+      S.online.error = api.explainError(err);
+      render();
+    }
+  }
+  async function joinOnlineRoom() {
+    const name = String(S.online.name || "").trim().slice(0, 18);
+    const code = String(S.online.code || "").trim().toUpperCase();
+    if (!/^[A-Z0-9]{4}$/.test(code)) { S.online.error = "Koden ska vara fyra tecken."; render(); return; }
+    if (!name) { S.online.error = "Skriv ditt namn först."; render(); return; }
+    const api = netApi();
+    if (!api) { S.online.error = "Kunde inte nå Firebase."; render(); return; }
+    S.online.error = "";
+    S.online.status = "Går med…";
+    render();
+    try {
+      ensurePlayerId();
+      await api.joinRoom(code, { playerId: S.online.playerId, name: name });
+      S.online.code = code;
+      S.online.name = name;
+      identSave();
+      const url = new URL(location.href);
+      url.searchParams.set("rum", code);
+      history.replaceState({}, "", url.pathname + url.search);
+      listenOnline(code);
+    } catch (err) {
+      S.online.status = "";
+      S.online.error = api.explainError(err);
+      render();
+    }
+  }
+  function prepFor(q) {
+    const prep = {};
+    if (q.type === "order") prep.pool = KIA.shuffle(q.items.slice());
+    if (q.type === "odd") prep.oddOrder = KIA.shuffle(q.items.map(function (item) { return item.id; }));
+    if (q.type === "media") prep.mediaOrder = KIA.shuffle(q.choices.map(function (choice) { return choice.id; }));
+    return prep;
+  }
+  async function beginOnlineRound() {
+    if (!isHost()) return;
+    const api = netApi();
+    const room = S.online.room;
+    if (!api || !room) return;
+    const n = room.length || S.length || 5;
+    const dealt = KIA.dealRound(BANK, { cat: room.cat || "alla", type: room.type || "alla", n: n }, []);
+    const preps = {};
+    dealt.forEach(function (q) { preps[q.id] = prepFor(q); });
+    S.celebrated = false;
+    S.online.soundedQi = null;
+    try {
+      await api.begin(room.code, {
+        qIds: dealt.map(function (q) { return q.id; }),
+        preps: preps,
+        length: n,
+        cat: room.cat || "alla",
+        type: room.type || "alla",
+        ids: (room.playerIds || []).slice(),
+      });
+    } catch (err) {
+      S.online.error = api.explainError(err);
+      render();
+    }
+  }
+  async function submitOnline() {
+    if (!canLock() || S.online.sending) return;
+    const api = netApi();
+    const room = S.online.room;
+    const entry = cur();
+    if (!api || !room || !entry) return;
+    S.online.sending = true;
+    const me = activePlayer();
+    const sub = {
+      qi: room.qi || 0,
+      guess: entry.q.type === "slider" ? KIA.snap(entry.q, S.guess) : null,
+      placed: S.placed.slice(),
+      selected: S.selected,
+      wager: S.wager,
+      streakBefore: me.streak || 0,
+    };
+    try {
+      await api.submit(S.online.playerId, sub);
+    } catch (err) {
+      S.online.error = api.explainError(err);
+      S.online.sending = false;
+      render();
+      return;
+    }
+    S.online.sending = false;
+  }
+  async function forceReveal() {
+    const api = netApi();
+    const room = S.online.room;
+    if (!api || !room || room.phase !== "play") return;
+    try {
+      await api.reveal(room.code, function (qid, ans, streak) {
+        const q = BANK.find(function (item) { return item.id === qid; });
+        if (!q) return { raw: 0, newStreak: 0 };
+        const sub = ans ? { guess: ans.guess, placed: ans.placed, selected: ans.selected, wager: ans.wager } : null;
+        const before = sub && typeof ans.streakBefore === "number" ? ans.streakBefore : (streak || 0);
+        return KIA.gradeAnswer(q, sub, sub ? before : (streak || 0));
+      });
+    } catch (err) {
+      S.online.error = api.explainError(err);
+      render();
+    }
+  }
+  async function hostAdvance() {
+    if (!isHost()) return;
+    const api = netApi();
+    const room = S.online.room;
+    if (!api || !room) return;
+    try { await api.advance(room.code); }
+    catch (err) { S.online.error = api.explainError(err); render(); }
+  }
+  async function copyInvite() {
+    const url = inviteUrl(S.online.code);
+    try {
+      await navigator.clipboard.writeText(url);
+      S.online.status = "Länken är kopierad.";
+    } catch (e) {
+      S.online.status = "Markera länken och kopiera den.";
+    }
+    render();
+  }
+  async function shareInvite() {
+    const url = inviteUrl(S.online.code);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "KnowItAlls", text: "Hoppa in i rum " + S.online.code, url: url });
+        return;
+      } catch (e) {
+        if (e && e.name === "AbortError") return;
+      }
+    }
+    copyInvite();
+  }
+  function onlineProgressInner() {
+    const room = S.online.room;
+    if (!room) return "";
+    const qi = room.qi || 0;
+    const people = orderedRoster();
+    const done = people.filter(function (p) { return p.answeredQi === qi; });
+    return "<b>" + done.length + " av " + people.length + " har svarat</b>";
+  }
+  function onlineProgress() {
+    if (S.mode !== "online") return "";
+    const room = S.online.room;
+    if (!room) return "";
+    const qi = room.qi || 0;
+    const people = orderedRoster();
+    return '<div class="progressline" id="liveprogress"><b>' + people.filter(function (p) { return p.answeredQi === qi; }).length + " av " + people.length + ' har svarat</b><div class="chips">' +
+      people.map(function (p) {
+        const on = p.answeredQi === qi;
+        return '<span class="chip"' + (on ? "" : ' style="opacity:.45"') + ">" + esc(p.name || "Spelare") + "</span>";
+      }).join("") + "</div></div>";
+  }
+  function lobbyList() {
+    const people = S.players.length ? S.players : orderedRoster().map(function (p, i) {
+      return { id: p.id, name: p.name, host: S.online.room && p.id === S.online.room.hostId, color: playerColor(i) };
+    });
+    if (!people.length) return '<p class="hint">Ingen har hunnit in än.</p>';
+    return '<ul class="lobby">' + people.map(function (p) {
+      return "<li><b><i class=\"pdot\" style=\"background:" + p.color + "\"></i>" + esc(p.name) + "</b>" + (p.host ? '<span class="hostbadge">Värd</span>' : "") + "</li>";
+    }).join("") + "</ul>";
+  }
+  function viewOnlineCreate() {
+    const lens = [5, 10, 15].map(function (n) {
+      return '<button type="button" data-act="len" data-v="' + n + '" aria-pressed="' + (S.length === n) + '">' + n + "</button>";
+    }).join("");
+    const cats = chip("cat", "alla", "Alla", S.cat === "alla") + Object.keys(KIA.CATS).map(function (k) { return chip("cat", k, KIA.CATS[k], S.cat === k); }).join("");
+    const types = chip("type", "alla", "Blandat", S.type === "alla") + Object.keys(KIA.TYPES).map(function (k) { return chip("type", k, KIA.TYPES[k].name, S.type === k); }).join("");
+    return shell(
+      '<article class="card narrow"><p class="kicker">Egna enheter</p><h2>Öppna ett rum</h2><p class="sub">Du blir värd. De andra öppnar länken på sin telefon eller dator.</p>' +
+      (S.online.error ? '<p class="notice">' + esc(S.online.error) + "</p>" : "") +
+      (S.online.status ? '<p class="hint">' + esc(S.online.status) + "</p>" : "") +
+      '<label class="namefield">Ditt namn<input data-onlinename="1" maxlength="18" placeholder="Namn" value="' + esc(S.online.name || "") + '" autocomplete="off"></label>' +
+      '<div class="block"><span class="lbl">Antal frågor</span><div class="seg">' + lens + "</div></div>" +
+      '<div class="block"><span class="lbl">Kategori</span><div class="chips">' + cats + "</div></div>" +
+      '<div class="block"><span class="lbl">Frågeform</span><div class="chips">' + types + "</div></div>" +
+      '<button type="button" class="primary" data-act="create-room">Skapa rum</button>' +
+      '<button type="button" class="ghost" data-act="online-join">Jag har en kod</button></article>'
+    );
+  }
+  function viewOnlineJoin() {
+    return shell(
+      '<article class="card narrow"><p class="kicker">Egna enheter</p><h2>Gå med i rummet</h2><p class="sub">Skriv koden från värden, eller använd länken du fick.</p>' +
+      (S.online.error ? '<p class="notice">' + esc(S.online.error) + "</p>" : "") +
+      (S.online.status ? '<p class="hint">' + esc(S.online.status) + "</p>" : "") +
+      '<label class="namefield">Rumskod<input data-roomcode="1" maxlength="4" placeholder="ABCD" value="' + esc(S.online.code || "") + '" autocomplete="off" autocapitalize="characters"></label>' +
+      '<label class="namefield">Ditt namn<input data-onlinename="1" maxlength="18" placeholder="Namn" value="' + esc(S.online.name || "") + '" autocomplete="off"></label>' +
+      '<button type="button" class="primary" data-act="join-room">Gå med</button>' +
+      '<button type="button" class="ghost" data-act="home">Tillbaka</button></article>'
+    );
+  }
+  function viewOnlineLobby() {
+    const code = S.online.code || (S.online.room && S.online.room.code) || "";
+    const link = code ? inviteUrl(code) : "";
+    const count = S.players.length || S.online.roster.length;
+    return shell(
+      '<article class="card narrow"><p class="kicker">Lobbyn</p><h2>Rum ' + esc(code) + '</h2><p class="codebig">' + esc(code) + '</p><p class="sub">' + count + (count === 1 ? " person är inne." : " personer är inne.") + "</p>" +
+      (S.online.error ? '<p class="notice">' + esc(S.online.error) + "</p>" : "") +
+      (S.online.status ? '<p class="hint">' + esc(S.online.status) + "</p>" : "") +
+      '<label class="namefield">Inbjudningslänk<input id="invitelink" readonly value="' + esc(link) + '"></label>' +
+      '<div class="rowbtns"><button type="button" class="ghost" data-act="copy-link">Kopiera länk</button><button type="button" class="ghost" data-act="share-link">Dela</button></div>' +
+      lobbyList() +
+      (isHost()
+        ? '<button type="button" class="primary" data-act="start"' + (count ? "" : " disabled") + ">Starta rundan</button>"
+        : '<p class="hint">Väntar på att värden startar.</p>') +
+      "</article>",
+      { who: activePlayer().name }
+    );
+  }
+  function viewOnlineWait() {
+    return shell(
+      '<article class="card narrow"><p class="kicker">Fråga ' + ((S.online.room && S.online.room.qi || 0) + 1) + " av " + ((S.online.room && S.online.room.qIds || []).length) + '</p><h2>Svaret är inne</h2>' +
+      onlineProgress() +
+      '<p class="hint">De andra svarar på sina skärmar.</p>' +
+      (isHost() ? '<button type="button" class="primary" data-act="reveal">Visa facit</button>' : '<p class="hint">Facit kommer när alla har svarat, eller när värden tar fram det.</p>') +
+      "</article>",
+      { score: activePlayer().score, who: activePlayer().name }
+    );
+  }
+  function onlineEnd() {
+    const n = (S.online.room && S.online.room.qIds || []).length || 1;
+    const ranked = S.players.map(function (p, i) { return { p: p, i: i }; }).sort(function (a, b) { return b.p.score - a.p.score || a.i - b.i; });
+    const top = ranked.length ? ranked[0].p.score : 0;
+    const winners = ranked.filter(function (r) { return r.p.score === top; });
+    const headline = !ranked.length ? "Slut" : winners.length > 1 ? "Delad seger i toppen" : winners[0].p.name + " tar hem studion";
+    const rows = ranked.map(function (r) {
+      const title = KIA.titleFor(r.p.score, n).name;
+      const place = ranked.filter(function (o) { return o.p.score > r.p.score; }).length + 1;
+      return '<li><div class="place">' + place + '</div><div><b>' + esc(r.p.name) + "</b><small>" + esc(title) + '</small></div><b class="sc">' + KIA.fmtInt(r.p.score) + "</b></li>";
+    }).join("");
+    return '<article class="card narrow"><p class="kicker">Rum ' + esc(S.online.code) + '</p><h2 class="rank">' + esc(headline) + '</h2><div class="podium-wrap"><ol class="podium">' + rows + "</ol></div>" +
+      (isHost()
+        ? '<button type="button" class="primary" data-act="again">Spela igen</button>'
+        : '<p class="hint">Värden kan starta en ny runda i samma rum. Ingen ny länk behövs.</p>') +
+      '<button type="button" class="ghost" data-act="leave">Lämna rummet</button></article>';
+  }
+  function bootOnline() {
+    ensurePlayerId();
+    const saved = identLoad();
+    if (saved.name && !S.online.name) S.online.name = saved.name;
+    let rum = "";
+    try { rum = (new URL(location.href).searchParams.get("rum") || "").toUpperCase(); } catch (e) { rum = ""; }
+    if (!/^[A-Z0-9]{4}$/.test(rum)) return;
+    S.mode = "online";
+    S.online.code = rum;
+    if (saved.room === rum && saved.name) {
+      S.online.name = saved.name;
+      joinOnlineRoom();
+    } else {
+      S.screen = "online-join";
+    }
+  }
+
+  bootOnline();
   render();
 })();
