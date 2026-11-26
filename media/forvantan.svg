@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520" role="img" aria-labelledby="t">
+  <title id="t">Två rutor: en prydlig pannkaka och en vidbränd hög</title>
+  <rect width="900" height="520" rx="28" fill="#f6efe3"/>
+  <rect x="28" y="28" width="410" height="464" rx="22" fill="#fffdf8" stroke="#e4d5bf"/>
+  <rect x="462" y="28" width="410" height="464" rx="22" fill="#fffdf8" stroke="#e4d5bf"/>
+  <text x="233" y="78" text-anchor="middle" font-family="Georgia, serif" font-size="28" fill="#8a5a10">FÖRVÄNTAN</text>
+  <text x="667" y="78" text-anchor="middle" font-family="Georgia, serif" font-size="28" fill="#9f2218">VERKLIGHET</text>
+  <ellipse cx="233" cy="250" rx="92" ry="28" fill="#e7c27a"/>
+  <ellipse cx="233" cy="232" rx="84" ry="26" fill="#f0d48a"/>
+  <ellipse cx="233" cy="214" rx="76" ry="24" fill="#f6e2a8"/>
+  <rect x="214" y="188" width="38" height="16" rx="4" fill="#f4d35e"/>
+  <path d="M220 188c8-18 22-18 30 0" fill="#7a3e12"/>
+  <ellipse cx="667" cy="268" rx="100" ry="46" fill="#3a2418"/>
+  <ellipse cx="640" cy="246" rx="48" ry="28" fill="#2a1a12"/>
+  <ellipse cx="700" cy="252" rx="36" ry="22" fill="#4a2e20"/>
+  <path d="M620 210c8-26 4-40 18-52" fill="none" stroke="#8d8d8d" stroke-width="6" stroke-linecap="round"/>
+  <path d="M668 198c6-30 2-44 16-58" fill="none" stroke="#9a9a9a" stroke-width="6" stroke-linecap="round"/>
+  <path d="M710 214c10-22 8-36 20-46" fill="none" stroke="#b0b0b0" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="600" cy="250" r="6" fill="#1c140f"/>
+  <text x="233" y="430" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#5e5146">en hög pannkakor</text>
+  <text x="667" y="430" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#5e5146">en rykande kolbit</text>
+</svg>

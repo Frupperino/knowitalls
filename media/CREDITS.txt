@@ -1,0 +1,17 @@
+Bilder och klipp i media/ är speglade lokalt så att spelet inte hämtar något utifrån.
+
+Alla filmbilder och klipp är public domain och kommer från Wikimedia Commons,
+utom moon-loopen som inte används. Källfiler:
+
+- moon.webp — Georges Méliès, Le Voyage dans la lune, 1902. Public domain.
+- caligari.webp — Franz Xaver Setzer, porträtt av Conrad Veidt som Cesare, omkring 1920. Public domain.
+- train.webp — Justus D. Barnes i The Great Train Robbery, Edwin S. Porter, 1903. Public domain.
+- nosferatu.webp — bildruta, Nosferatu, F. W. Murnau, 1922. Public domain.
+- orlok-trappa.mp4 och orlok-trappa.webp — bildruta ur samma film, trappan. Public domain.
+- lumiere.webp — L'Arrivée d'un train en gare de La Ciotat, bröderna Lumière, 1896. Public domain.
+- kiss.mp4 och kiss.webp — The Kiss, William Heise, 1896, med May Irwin och John C. Rice. Public domain.
+- bauer.webp — John Bauer, prinsessan och trollen, ur Bland tomtar och troll. Public domain.
+- tomte.webp — Jenny Nyström, julkort. Public domain.
+- forvantan.svg — egen teckning för KnowItAlls.
+
+Inga heta länkar. Filerna ligger i repot och spelas upp från samma sajt.

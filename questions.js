@@ -667,5 +667,149 @@ window.KIA_QUESTIONS = [
     claim: "Honung kan hålla sig ätbar i tusentals år.",
     answer: true,
     explain: "Visste du att honung har så lite vatten och så mycket socker att bakterier inte trivs, och att man har hittat ätbar honung i flera tusen år gamla gravar?"
+  },
+
+  {
+    id: "med-moon", cat: "film", type: "media", group: "moon",
+    q: "Vilken film är det här?",
+    media: { kind: "image", src: "media/moon.webp", alt: "En handkolorerad stumfilmsbild där en raket har träffat månens öga.", credit: "Georges Méliès, 1902. Public domain." },
+    choices: [
+      { id: "moon", label: "Resan till månen" },
+      { id: "metro", label: "Metropolis" },
+      { id: "kong", label: "King Kong" },
+      { id: "nos", label: "Nosferatu" }
+    ],
+    answer: "moon",
+    explain: "Visste du att Georges Méliès lät en raket träffa månen i ögat 1902, i Resan till månen, en av de första filmerna som hittade på en hel värld?"
+  },
+  {
+    id: "med-moon-year", cat: "film", type: "media", group: "moon",
+    q: "Vilket år hade den här filmen premiär?",
+    media: { kind: "image", src: "media/moon.webp", alt: "Månen med ett ansikte får en raket i ögat.", credit: "Georges Méliès, 1902. Public domain." },
+    choices: [
+      { id: "y1896", label: "1896" },
+      { id: "y1902", label: "1902" },
+      { id: "y1920", label: "1920" },
+      { id: "y1927", label: "1927" }
+    ],
+    answer: "y1902",
+    explain: "Visste du att Resan till månen hade premiär 1902 och spelades in i en glashall, med kulisser i stället för rymdfart?"
+  },
+  {
+    id: "med-caligari", cat: "film", type: "media",
+    q: "Vem är mannen med de uppspärrade ögonen?",
+    media: { kind: "image", src: "media/caligari.webp", alt: "Svartvitt porträtt av en man med mörkt hår, stirrande ögon och händerna mot bröstet.", credit: "Franz Xaver Setzer, omkring 1920. Public domain." },
+    choices: [
+      { id: "cesare", label: "Cesare i Dr Caligaris kabinett" },
+      { id: "orlok", label: "Greve Orlok i Nosferatu" },
+      { id: "phantom", label: "Fantomen på operan" },
+      { id: "frank", label: "Dr Frankenstein" }
+    ],
+    answer: "cesare",
+    explain: "Visste du att mannen är Cesare, sömngångaren i Dr Caligaris kabinett från 1920, spelad av Conrad Veidt med ett smink som fortfarande känns igen?"
+  },
+  {
+    id: "med-train", cat: "film", type: "media",
+    q: "Vilken film slutar med att den här mannen siktar rakt in i kameran?",
+    media: { kind: "image", src: "media/train.webp", alt: "En mustaschprydd man i cowboyhatt pekar en revolver mot betraktaren.", credit: "The Great Train Robbery, 1903. Public domain." },
+    choices: [
+      { id: "train", label: "Den stora tågplundringen" },
+      { id: "noon", label: "Sheriffen" },
+      { id: "samurai", label: "De sju samurajerna" },
+      { id: "moon", label: "Resan till månen" }
+    ],
+    answer: "train",
+    explain: "Visste du att mannen som siktar rakt in i kameran är banditen i Den stora tågplundringen från 1903, ett av filmhistoriens första riktiga slutklipp?"
+  },
+  {
+    id: "med-orlok", cat: "film", type: "media", group: "nosferatu",
+    q: "Vem står i dörröppningen?",
+    media: { kind: "image", src: "media/nosferatu.webp", alt: "En lång, blek figur med spetsiga öron står stilla i en spetsig dörr.", credit: "Nosferatu, 1922. Public domain." },
+    choices: [
+      { id: "orlok", label: "Greve Orlok" },
+      { id: "cesare", label: "Cesare" },
+      { id: "dracula", label: "Dracula från 1931" },
+      { id: "frank", label: "Dr Frankenstein" }
+    ],
+    answer: "orlok",
+    explain: "Visste du att figuren i dörren är greve Orlok i Nosferatu från 1922, Murnaus vampyrfilm som gjordes utan lov av Dracula-rättigheterna?"
+  },
+  {
+    id: "med-lumiere", cat: "film", type: "media",
+    q: "Vilken berömd kortfilm är de här rutorna tagna från?",
+    media: { kind: "image", src: "media/lumiere.webp", alt: "Ett rutnät av svartvita bildrutor där ett ånglok kommer närmare.", credit: "Bröderna Lumière, 1896. Public domain." },
+    choices: [
+      { id: "ciotat", label: "Tåget anländer till La Ciotat" },
+      { id: "robbery", label: "Den stora tågplundringen" },
+      { id: "moon", label: "Resan till månen" },
+      { id: "trip", label: "En resa jorden runt" }
+    ],
+    answer: "ciotat",
+    explain: "Visste du att rutorna kommer från Bröderna Lumières film där ett tåg ångar in i La Ciotat 1896, och att publiken ska ha ryckt till på riktigt?"
+  },
+  {
+    id: "med-kiss", cat: "film", type: "media",
+    q: "Vad är det som händer i klippet?",
+    media: { kind: "video", src: "media/kiss.mp4", poster: "media/kiss.webp", alt: "Ett par i 1890-talskläder lutar sig mot varandra och kysses.", credit: "The Kiss, 1896. Public domain." },
+    choices: [
+      { id: "kiss", label: "Filmhistoriens första kyss" },
+      { id: "song", label: "En sångrepetition" },
+      { id: "dentist", label: "Ett tandläkarbesök" },
+      { id: "box", label: "En boxningsmatch" }
+    ],
+    answer: "kiss",
+    explain: "Visste du att May Irwin och John C Rice kysstes på film redan 1896, i en liten scen som kallades The Kiss och som chockade en del tittare?"
+  },
+  {
+    id: "med-trappa", cat: "film", type: "media", group: "nosferatu",
+    q: "Vem är skuggan som tar sig uppför trappan?",
+    media: { kind: "video", src: "media/orlok-trappa.mp4", poster: "media/orlok-trappa.webp", alt: "En kloförsedd skugga rör sig längs ett trappräcke.", credit: "Nosferatu, 1922. Public domain." },
+    choices: [
+      { id: "orlok", label: "Greve Orlok" },
+      { id: "caligari", label: "Dr Caligari" },
+      { id: "cesare", label: "Cesare" },
+      { id: "phantom", label: "Fantomen på operan" }
+    ],
+    answer: "orlok",
+    explain: "Visste du att skuggan som tar sig uppför trappan är greve Orlok i Nosferatu från 1922, Murnaus sätt att låta monstret synas utan att visa hela kroppen?"
+  },
+  {
+    id: "med-forvantan", cat: "film", type: "media",
+    q: "Vad kallas det här upplägget?",
+    media: { kind: "image", src: "media/forvantan.svg", alt: "Två rutor: en prydlig pannkakshög märkt förväntan och en rykande kolbit märkt verklighet.", credit: "Egen teckning för KnowItAlls." },
+    choices: [
+      { id: "forv", label: "Förväntan mot verklighet" },
+      { id: "tid", label: "En tidslinje" },
+      { id: "slakt", label: "Ett släktträd" },
+      { id: "bruk", label: "En bruksanvisning" }
+    ],
+    answer: "forv",
+    explain: "Visste du att förväntan mot verklighet blev ett eget meme-format just för att klyftan mellan den snygga planen och utfallet är så lätt att känna igen?"
+  },
+  {
+    id: "med-bauer", cat: "kultur", type: "media",
+    q: "Vem har målat prinsessan och de här trollen?",
+    media: { kind: "image", src: "media/bauer.webp", alt: "En ljus prinsessa går mellan två stora troll i en mörk granskog.", credit: "John Bauer. Public domain." },
+    choices: [
+      { id: "bauer", label: "John Bauer" },
+      { id: "nystrom", label: "Jenny Nyström" },
+      { id: "larsson", label: "Carl Larsson" },
+      { id: "beskow", label: "Elsa Beskow" }
+    ],
+    answer: "bauer",
+    explain: "Visste du att John Bauer målade prinsessan och trollen till Bland tomtar och troll, och att de bilderna fortfarande är mallen för hur ett svenskt skogstroll ser ut?"
+  },
+  {
+    id: "med-tomte", cat: "kultur", type: "media",
+    q: "Vem ritade den här tomten med luvan?",
+    media: { kind: "image", src: "media/tomte.webp", alt: "Tre tomtar med röda luvor lastar paket på en kälke utanför en lada.", credit: "Jenny Nyström. Public domain." },
+    choices: [
+      { id: "nystrom", label: "Jenny Nyström" },
+      { id: "bauer", label: "John Bauer" },
+      { id: "beskow", label: "Elsa Beskow" },
+      { id: "larsson", label: "Carl Larsson" }
+    ],
+    answer: "nystrom",
+    explain: "Visste du att Jenny Nyström ritade tomtar med luva och vitt skägg så ofta att hon i praktiken formade hur den svenska jultomten ser ut?"
   }
 ];

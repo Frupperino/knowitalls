@@ -4,7 +4,14 @@
   const app = document.getElementById("app");
   const live = document.getElementById("live");
   const KEY = "kia-studio-v1";
-  const PCOLS = ["#d63a2c", "#0f766e", "#1d4e89", "#a86b12"];
+  const MAX_PLAYERS = 30;
+
+  function playerColor(i) {
+    const hues = [6, 168, 208, 28, 272, 138, 338, 188, 48, 232, 312, 92];
+    const h = hues[i % hues.length];
+    const light = 30 + (Math.floor(i / hues.length) % 2) * 8;
+    return "hsl(" + h + " 58% " + light + "%)";
+  }
 
   if (!KIA || !BANK) {
     app.innerHTML = '<main class="app"><article class="card"><h2>Frågorna kom inte fram.</h2><p>Ladda om sidan.</p></article></main>';
@@ -18,9 +25,9 @@
     cat: "alla",
     type: "alla",
     length: 10,
-    per: 3,
-    nPlayers: 2,
-    names: stats.names && stats.names.length ? stats.names.slice(0, 4) : ["", "", "", ""],
+    per: 2,
+    nPlayers: Array.isArray(stats.names) && stats.names.length >= 2 ? Math.min(30, stats.names.length) : 2,
+    names: Array.isArray(stats.names) && stats.names.length >= 2 ? stats.names.slice(0, 30) : ["", ""],
     players: [],
     deck: [],
     di: 0,
@@ -92,7 +99,8 @@
   }
 
   function wantCount() {
-    return S.mode === "solo" ? S.length : S.nPlayers * S.per;
+    if (S.mode === "solo") return S.length;
+    return Math.max(2, S.names.length) * S.per;
   }
 
   function ctx() {
@@ -171,6 +179,12 @@
     else if (S.screen === "end") html = viewEnd();
     app.innerHTML = html;
     if (scroll) window.scrollTo(0, 0);
+    const race = document.querySelector(".race-wrap");
+    const up = race && race.querySelector(".up");
+    if (race && up) race.scrollTop = Math.max(0, up.offsetTop - race.offsetTop - 8);
+    const strip = document.querySelector(".strip");
+    const chipNow = strip && strip.querySelector(".up");
+    if (strip && chipNow) strip.scrollLeft = Math.max(0, chipNow.offsetLeft - 16);
     if (S.screen === "end") celebrate();
     const say = S.last && S.screen === "feedback" ? S.last.title + ". " + S.last.detail : "";
     if (say && live.textContent !== say) live.textContent = say;
@@ -179,7 +193,7 @@
   function viewHome() {
     const tiles = Object.keys(KIA.TYPES).map((k) => {
       const t = KIA.TYPES[k];
-      const color = { slider: "var(--slider)", order: "var(--order)", odd: "var(--odd)", bluff: "var(--bluff)" }[k];
+      const color = { slider: "var(--slider)", order: "var(--order)", odd: "var(--odd)", bluff: "var(--bluff)", media: "var(--media)" }[k];
       return '<button type="button" class="mech" data-act="mech" data-v="' + k + '"><i style="--c:' + color + '"></i><b>' + esc(t.name) + "</b><span>" + esc(t.blurb) + "</span></button>";
     }).join("");
     let record = "";
@@ -189,7 +203,7 @@
       record = '<p class="fine">Inget rekord än. En blandad tiorunda skriver in dig.</p>';
     }
     return shell(
-      '<div class="home"><section class="hero"><p class="kicker">Frågesport på svenska</p><h1>Vem kan mest ikväll?</h1><p class="lede">Glid fram till rätt år, lägg saker i ordning, hitta udda fågeln och bestäm dig: sant eller bluff.</p>' + record + '<p class="fine"><button type="button" class="linkish" data-act="help">Så funkar det</button></p></section><section><div class="modes"><button type="button" class="mode solo" data-act="solo"><small>En spelare</small><strong>Solo</strong><span>En runda, ett rekord, ingen att skylla på.</span></button><button type="button" class="mode" data-act="party"><small>Samma telefon</small><strong>Sällskap</strong><span>2–4 spelare. Skicka luren, håll för skärmen.</span></button></div><div class="mechs" style="margin-top:12px">' + tiles + '</div><p class="fine">Poäng och rekord stannar i den här telefonen. ' + BANK.length + " frågor i leken.</p></section></div>"
+      '<div class="home"><section class="hero"><p class="kicker">Frågesport på svenska</p><h1>Vem kan mest ikväll?</h1><p class="lede">Glid fram till rätt år, lägg saker i ordning, avslöja bluffen eller gissa vad bilden och klippet är.</p>' + record + '<p class="fine"><button type="button" class="linkish" data-act="help">Så funkar det</button></p></section><section><div class="modes"><button type="button" class="mode solo" data-act="solo"><small>En spelare</small><strong>Solo</strong><span>En runda, ett rekord, ingen att skylla på.</span></button><button type="button" class="mode" data-act="party"><small>Samma telefon</small><strong>Sällskap</strong><span>Skicka luren. Så många ni är.</span></button></div><div class="mechs" style="margin-top:12px">' + tiles + '</div><p class="fine">Poäng och rekord stannar i den här telefonen. ' + BANK.length + " frågor i leken.</p></section></div>"
     );
   }
 
@@ -214,13 +228,22 @@
         [5, 10, 15].map((n) => '<button type="button" data-act="len" data-v="' + n + '" aria-pressed="' + (S.length === n) + '">' + n + "</button>").join("") +
         "</div></div>";
     } else {
-      extra = '<div class="block"><span class="lbl">Spelare</span><div class="seg">' +
-        [2, 3, 4].map((n) => '<button type="button" data-act="np" data-v="' + n + '" aria-pressed="' + (S.nPlayers === n) + '">' + n + "</button>").join("") +
-        '</div></div><div class="block"><span class="lbl">Namn</span><div class="names">' +
-        Array.from({ length: S.nPlayers }, (_, i) => '<label class="namefield">Spelare ' + (i + 1) + '<input data-namei="' + i + '" maxlength="16" placeholder="Namn" value="' + esc(S.names[i] || "") + '" autocomplete="off"></label>').join("") +
-        '</div></div><div class="block"><span class="lbl">Frågor var</span><div class="seg">' +
-        [2, 3, 4].map((n) => '<button type="button" data-act="per" data-v="' + n + '" aria-pressed="' + (S.per === n) + '">' + n + "</button>").join("") +
-        "</div></div>";
+      const n = S.names.length;
+      const perWord = S.per === 1 ? "fråga" : "frågor";
+      const rows = S.names.map((name, i) => {
+        const rm = n <= 2 ? " disabled" : "";
+        return '<div class="namerow"><i class="pdot" style="background:' + playerColor(i) + '"></i><input data-namei="' + i + '" maxlength="18" placeholder="Spelare ' + (i + 1) + '" value="' + esc(name || "") + '" autocomplete="off" aria-label="Namn på spelare ' + (i + 1) + '"><button type="button" class="rm" data-act="rmplayer" data-v="' + i + '" aria-label="Ta bort spelare ' + (i + 1) + '"' + rm + ">×</button></div>";
+      }).join("");
+      const addLabel = n >= MAX_PLAYERS ? "30 spelare räcker nu" : "+ Lägg till spelare";
+      extra = '<div class="block"><span class="lbl">Spelare</span><div class="roster">' + rows + '</div><button type="button" class="ghost addplayer" data-act="addplayer"' + (n >= MAX_PLAYERS ? " disabled" : "") + ">" + addLabel + "</button></div>" +
+        '<div class="block"><span class="lbl">Frågor var</span><div class="seg">' +
+        [1, 2, 3].map((k) => '<button type="button" data-act="per" data-v="' + k + '" aria-pressed="' + (S.per === k) + '">' + k + "</button>").join("") +
+        "</div><p class=\"fine\">Alla får lika många frågor, i tur och ordning. " + n + " spelare × " + S.per + " " + (S.per === 1 ? "fråga" : "frågor") + ".</p></div>";
+      note = (playN === 0
+        ? "Inga frågor i den kombon."
+        : playN < want
+          ? "Bara " + playN + " frågor matchar, så alla kanske inte hinner lika många."
+          : n + " spelare får " + S.per + " " + perWord + " var. Rundan blir " + playN + " frågor.");
     }
     return shell(
       '<article class="card narrow"><p class="kicker">' + (S.mode === "solo" ? "Solo" : "Sällskap") + '</p><h2>Bygg rundan</h2><p class="sub">' + note + "</p>" +
@@ -238,9 +261,10 @@
       ["Rätt ordning", "Tryck i den ordning sakerna ska ligga, eller dra dem till en plats. Varje sak på rätt plats ger 250 poäng. Alla fyra ger 1 000. Ångra tömmer den sista fyllda platsen."],
       ["Udda fågeln", "Tre hör ihop på ett sätt som inte sägs högt. Välj den som bryter mönstret. Kopplingen visas när du har låst svaret."],
       ["Sant eller bluff?", "Ett påstående som antingen är sant eller för snyggt för att vara sant. Efteråt kommer en mening om varför."],
-      ["Satsa", "På udda fågeln och sant eller bluff väljer du insats innan du låser. Försiktig ger 400, Kaxig ger 800. All-in ger 1 200, men kostar 300 om du har fel. Poängen kan inte gå under noll."],
+      ["Satsa", "På udda fågeln, sant eller bluff och bildfrågor väljer du insats innan du låser. Försiktig ger 400, Kaxig ger 800. All-in ger 1 200, men kostar 300 om du har fel. Poängen kan inte gå under noll."],
       ["Svit", "Håller du i gång sviten ger den tredje träffen ×1,5 och varje träff därefter ×2. En träff är ett rätt svar, eller minst 500 poäng på en glidare eller en ordning. En miss nollar sviten. I sällskap har var och en sin egen."],
-      ["Solo och sällskap", "Solo är fem, tio eller femton frågor. Rekordet sparas för en blandad tiorunda, i den här telefonen. I sällskap slår ni in två till fyra namn och skickar luren. Frågan döljs tills den som ska svara är redo."],
+      ["Bild och klipp", "En stillbild eller ett kort, tyst klipp. Det spelas upp direkt i sidan, och Spela igen startar om. Satsa och välj vad du tror att du ser."],
+      ["Solo och sällskap", "Solo är fem, tio eller femton frågor. Rekordet sparas för en blandad tiorunda, i den här telefonen. I sällskap lägger ni till så många spelare ni är och väljer en, två eller tre frågor var. Frågan döljs tills den som ska svara är redo."],
     ];
     return shell(
       '<article class="card narrow help"><p class="kicker">Regler</p><h2>Så funkar det</h2>' +
@@ -252,9 +276,9 @@
   function viewHandoff() {
     const entry = cur();
     const p = S.players[entry.pi];
-    const race = "<ul class=\"race\">" + S.players.map((pl, i) =>
-      '<li class="' + (i === entry.pi ? "up" : "") + '"><b>' + esc(pl.name) + "</b><em>" + KIA.fmtInt(pl.score) + "</em></li>"
-    ).join("") + "</ul>";
+    const race = '<div class="race-wrap"><ul class="race">' + S.players.map((pl, i) =>
+      '<li class="' + (i === entry.pi ? "up" : "") + '"><b><i class="pdot" style="background:' + pl.color + '"></i>' + esc(pl.name) + '</b><em>' + KIA.fmtInt(pl.score) + "</em></li>"
+    ).join("") + "</ul></div>";
     return shell(
       '<article class="card narrow hand"><p class="kicker">Fråga ' + (S.di + 1) + " av " + S.deck.length + '</p><p class="sub">Ge telefonen till</p><div class="who2" style="color:' + p.color + '">' + esc(p.name) + "</div><p>Ingen tjuvtitt. Tryck först när det är din tur.</p>" + race +
       '<button type="button" class="primary" data-act="ready">Jag är redo</button></article>',
@@ -274,11 +298,12 @@
     if (q.type === "slider") body = sliderBody(q);
     else if (q.type === "order") body = orderBody(entry);
     else if (q.type === "odd") body = oddBody(entry);
+    else if (q.type === "media") body = mediaBody(entry);
     else body = bluffBody(q);
     const headline = q.type === "bluff" ? q.claim : q.q;
     const ready = canLock();
     return shell(
-      '<article class="card play">' + segs() +
+      '<article class="card play">' + segs() + scoreStrip() +
       '<div class="meta"><span class="pill" data-type="' + q.type + '">' + esc(KIA.TYPES[q.type].name) + '</span><span class="pill quiet">' + esc(KIA.CATS[q.cat]) + '</span><span class="count">' + (S.di + 1) + " / " + S.deck.length + "</span></div>" +
       svit +
       '<h2 class="q">' + esc(headline) + "</h2>" +
@@ -294,15 +319,48 @@ function playHint(q) {
   if (q.type === "slider") return "Dra tills siffran känns rätt. Närmare ger mer.";
   if (q.type === "order") return q.hint + ". Tryck i ordning, eller dra till en plats.";
   if (q.type === "odd") return "Tre hör ihop. En bara låtsas. Satsa innan du låser.";
+  if (q.type === "media") return q.media && q.media.kind === "video"
+    ? "Klippet är tyst och snurrar. Satsa och gissa vad du ser."
+    : "Titta noga. Satsa och välj det som stämmer.";
   return "Satsa först. Välj sen sida.";
 }
 
 function keysHint(q) {
   if (q.type === "slider") return "Enter låser. Piltangenter rör glidaren.";
   if (q.type === "order") return "Enter låser när alla fyra sitter på plats.";
-  if (q.type === "odd") return "Enter låser. Tangenterna 1–4 väljer.";
+  if (q.type === "odd" || q.type === "media") return "Enter låser. Tangenterna 1–4 väljer.";
   return "Enter låser. S är sant, B är bluff.";
 }
+
+  function scoreStrip() {
+    if (S.mode !== "party" || S.players.length < 2) return "";
+    const here = cur() ? cur().pi : -1;
+    return '<div class="strip" aria-label="Ställning">' + S.players.map((p, i) =>
+      '<span class="' + (i === here ? "up" : "") + '"><i class="pdot" style="background:' + p.color + '"></i>' + esc(p.name) + "<b>" + KIA.fmtInt(p.score) + "</b></span>"
+    ).join("") + "</div>";
+  }
+
+  function mediaFigure(q) {
+    const m = q.media;
+    let inner;
+    if (m.kind === "video") {
+      inner = '<video src="' + esc(m.src) + '" poster="' + esc(m.poster || "") + '" playsinline muted loop autoplay preload="auto"></video>' +
+        '<button type="button" class="replay" data-act="replay">Spela igen</button>';
+    } else {
+      inner = '<img src="' + esc(m.src) + '" alt="' + esc(m.alt || "") + '">';
+    }
+    return '<figure class="stage-media">' + inner + "</figure>" +
+      (m.credit ? '<p class="credit">' + esc(m.credit) + "</p>" : "");
+  }
+
+  function mediaBody(entry) {
+    const q = entry.q;
+    const items = entry.mediaOrder.map((id) => q.choices.find((choice) => choice.id === id));
+    const choices = items.map((item, i) =>
+      '<button type="button" class="choice" data-act="media" data-v="' + esc(item.id) + '" aria-pressed="' + (S.selected === item.id) + '">' + (i + 1) + ". " + esc(item.label) + "</button>"
+    ).join("");
+    return mediaFigure(q) + wagerBar() + '<div class="choices">' + choices + "</div>";
+  }
 
   function sliderBody(q) {
     const guess = KIA.snap(q, S.guess);
@@ -358,7 +416,7 @@ function keysHint(q) {
     const last = S.di + 1 >= S.deck.length;
     const nextLabel = last ? "Se resultatet" : S.mode === "party" ? "Nästa spelare" : "Nästa fråga";
     return shell(
-      '<article class="card play fb ' + L.tone + '">' + segs() +
+      '<article class="card play fb ' + L.tone + '">' + segs() + scoreStrip() +
       '<p class="kicker">' + esc(L.title) + "</p>" +
       '<p class="delta ' + tone + '">' + sign + KIA.fmtInt(L.delta) + "</p>" +
       '<p>' + esc(L.detail) + esc(extraNote) + "</p>" +
@@ -409,7 +467,7 @@ function keysHint(q) {
       const place = ranked.filter((o) => o.p.score > r.p.score).length + 1;
       return '<li><div class="place">' + place + '</div><div><b>' + esc(r.p.name) + "</b><small>" + esc(title) + '</small></div><b class="sc">' + KIA.fmtInt(r.p.score) + "</b></li>";
     }).join("");
-    return '<article class="card narrow"><p class="kicker">Sällskap</p><h2 class="rank">' + esc(headline) + "</h2><ol class=\"podium\">" + rows + "</ol>" +
+    return '<article class="card narrow"><p class="kicker">Sällskap</p><h2 class="rank">' + esc(headline) + '</h2><div class="podium-wrap"><ol class="podium">' + rows + "</ol></div>" +
       logList() +
       '<button type="button" class="primary" data-act="again">En runda till</button>' +
       '<div class="rowbtns"><button type="button" class="ghost" data-act="setup">Byt upplägg</button><button type="button" class="ghost" data-act="home">Hem</button></div></article>';
@@ -443,14 +501,15 @@ function keysHint(q) {
     S.guess = q.type === "slider" ? KIA.snap(q, q.start) : null;
     if (q.type === "order" && !entry.pool) entry.pool = KIA.shuffle(q.items.slice());
     if (q.type === "odd" && !entry.oddOrder) entry.oddOrder = KIA.shuffle(q.items.map((item) => item.id));
+    if (q.type === "media" && !entry.mediaOrder) entry.mediaOrder = KIA.shuffle(q.choices.map((choice) => choice.id));
     S.screen = "play";
   }
 
   function cleanNames() {
     const used = new Set();
     const out = [];
-    for (let i = 0; i < S.nPlayers; i++) {
-      let n = String(S.names[i] || "").trim().replace(/\s+/g, " ").slice(0, 16);
+    for (let i = 0; i < S.names.length; i++) {
+      let n = String(S.names[i] || "").trim().replace(/\s+/g, " ").slice(0, 18);
       if (!n) n = "Spelare " + (i + 1);
       const base = n;
       let k = 2;
@@ -470,9 +529,10 @@ function keysHint(q) {
     if (S.mode === "party") {
       const names = cleanNames();
       stats.names = S.names.slice();
-      S.players = names.map((name, i) => ({ name: name, score: 0, streak: 0, color: PCOLS[i] }));
+      S.nPlayers = names.length;
+      S.players = names.map((name, i) => ({ name: name, score: 0, streak: 0, color: playerColor(i) }));
     } else {
-      S.players = [{ name: "Du", score: 0, streak: 0, color: PCOLS[0] }];
+      S.players = [{ name: "Du", score: 0, streak: 0, color: playerColor(0) }];
     }
     const qs = KIA.dealRound(BANK, { cat: S.cat, type: S.type, n: want }, stats.recentIds);
     S.deck = qs.map((q, i) => ({ q: q, pi: i % S.players.length }));
@@ -529,6 +589,14 @@ function keysHint(q) {
         detail = correct
           ? "Du plockade ut " + picked.label + "."
           : "Du valde " + picked.label + ". Udda fågeln var " + right.label + ".";
+      } else if (q.type === "media") {
+        correct = S.selected === q.answer;
+        const picked = q.choices.find((choice) => choice.id === S.selected);
+        const right = q.choices.find((choice) => choice.id === q.answer);
+        detail = correct
+          ? "Du svarade " + picked.label + "."
+          : "Du svarade " + picked.label + ". Rätt var " + right.label + ".";
+        extra = mediaFigure(q);
       } else {
         correct = (S.selected === "sant") === !!q.answer;
         detail = q.answer ? "Påståendet stämmer." : "Påståendet var en bluff.";
@@ -728,7 +796,34 @@ function keysHint(q) {
     if (act === "type") { S.type = el.dataset.v; render(); return; }
     if (act === "len") { S.length = Number(el.dataset.v); render(); return; }
     if (act === "per") { S.per = Number(el.dataset.v); render(); return; }
-    if (act === "np") { S.nPlayers = Number(el.dataset.v); render(); return; }
+    if (act === "addplayer") {
+      if (S.names.length >= MAX_PLAYERS) return;
+      S.names.push("");
+      S.nPlayers = S.names.length;
+      render();
+      const box = document.querySelector(".roster");
+      const inputs = document.querySelectorAll("[data-namei]");
+      if (box) box.scrollTop = box.scrollHeight;
+      if (inputs.length) inputs[inputs.length - 1].focus();
+      return;
+    }
+    if (act === "rmplayer") {
+      if (S.names.length <= 2) return;
+      S.names.splice(Number(el.dataset.v), 1);
+      S.nPlayers = S.names.length;
+      render();
+      return;
+    }
+    if (act === "replay") {
+      const video = document.querySelector(".stage-media video");
+      if (video) {
+        video.currentTime = 0;
+        const playing = video.play();
+        if (playing && playing.catch) playing.catch(function () {});
+      }
+      return;
+    }
+    if (act === "media") { S.selected = el.dataset.v; beep(600, 0.03, "sine", 0.02); render(); return; }
     if (act === "start" || act === "again") {
       if (act === "again") { /* behåll upplägget */ }
       startGame();
@@ -841,8 +936,9 @@ function keysHint(q) {
     }
     if (S.screen !== "play" || !cur()) return;
     const q = cur().q;
-    if (q.type === "odd" && "1234".includes(e.key)) {
-      const item = cur().oddOrder[Number(e.key) - 1];
+    if ((q.type === "odd" || q.type === "media") && "1234".includes(e.key)) {
+      const order = q.type === "odd" ? cur().oddOrder : cur().mediaOrder;
+      const item = order && order[Number(e.key) - 1];
       if (item) { S.selected = item; render(); }
     }
     if (q.type === "bluff" && (e.key === "1" || e.key.toLowerCase() === "s")) { S.selected = "sant"; render(); }

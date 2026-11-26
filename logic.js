@@ -7,6 +7,7 @@
     kultur: "Kultur & nöje",
     geografi: "Geografi & teknik",
     vardag: "Vardag & kluringar",
+    film: "Film, TV & memes",
   };
 
   const TYPES = {
@@ -14,6 +15,7 @@
     order: { name: "Rätt ordning", short: "Ordning", blurb: "Lägg fyra saker i rätt följd. Varje träff räknas." },
     odd: { name: "Udda fågeln", short: "Udda", blurb: "Tre hör ihop. En bara låtsas. Kopplingen avslöjas efteråt." },
     bluff: { name: "Sant eller bluff?", short: "Bluff", blurb: "En riktig kuriosa mot en snygg lögn. Välj sida." },
+    media: { name: "Bild & klipp", short: "Bild", blurb: "En stillbild eller ett kort klipp. Gissa vad du ser." },
   };
 
   const WAGERS = {
@@ -101,7 +103,7 @@
   }
 
   function isHit(type, base, correct) {
-    if (type === "odd" || type === "bluff") return !!correct;
+    if (type === "odd" || type === "bluff" || type === "media") return !!correct;
     return base >= 500;
   }
 
@@ -144,8 +146,9 @@
       return true;
     }
     if (type === "alla" && n >= 4) {
-      const types = shuffle(["slider", "order", "odd", "bluff"], rng);
-      for (let i = 0; i < types.length; i++) {
+      const types = shuffle(["slider", "order", "odd", "bluff", "media"], rng);
+      const takeTypes = n >= 5 ? types.length : 4;
+      for (let i = 0; i < takeTypes; i++) {
         const t = types[i];
         const c = bag.find((q) => q.type === t && !used.has(q.id) && !blocked(q));
         if (c) take(c);
