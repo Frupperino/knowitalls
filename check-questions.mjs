@@ -63,18 +63,35 @@ for (const q of qs) {
   } else if (q.type === "bluff") {
     if (typeof q.answer !== "boolean") err(q.id, "answer ska vara boolean");
     if (!q.claim || q.claim.length < 12) err(q.id, "påstående saknas");
+  } else if (q.type === "media") {
+    const m = q.media;
+    if (!m || (m.kind !== "image" && m.kind !== "video")) err(q.id, "media.kind saknas");
+    if (!m || !m.src || m.src.indexOf("..") >= 0 || /^https?:/i.test(m.src)) err(q.id, "media.src ska vara en lokal relativ fil");
+    if (m && m.src && !fs.existsSync(m.src)) err(q.id, "filen saknas: " + m.src);
+    if (m && m.src && fs.existsSync(m.src) && fs.statSync(m.src).size < 400) err(q.id, "filen är tom");
+    if (m && m.kind === "video") {
+      if (!/\.mp4$/i.test(m.src)) err(q.id, "video ska vara mp4");
+      if (!m.poster || !fs.existsSync(m.poster)) err(q.id, "video saknar poster");
+    }
+    if (!m || !m.alt || m.alt.length < 8) err(q.id, "alt-text saknas");
+    if (!Array.isArray(q.choices) || q.choices.length !== 4) err(q.id, "ska ha 4 val");
+    const cids = (q.choices || []).map((c) => c.id);
+    const labels = (q.choices || []).map((c) => c.label);
+    if (new Set(cids).size !== 4 || new Set(labels).size !== 4) err(q.id, "val inte unika");
+    if (!(q.choices || []).some((c) => c.id === q.answer)) err(q.id, "answer pekar fel");
   }
 }
 
 for (const [cat, n] of Object.entries(cats)) if (n < 8) err(cat, "bara " + n + " frågor");
 for (const t of ["slider", "order", "odd", "bluff"]) if ((types[t] || 0) < 12) err(t, "bara " + (types[t] || 0));
+if ((types.media || 0) < 8) err("media", "bara " + (types.media || 0));
 
 if (KIA.multFor(0) !== 1 || KIA.multFor(1) !== 1 || KIA.multFor(2) !== 1.5 || KIA.multFor(3) !== 2) {
   err("mult", "fel multiplikator");
 }
 const sample = KIA.dealRound(qs, { cat: "alla", type: "alla", n: 5 }, [], () => 0.42);
 const got = new Set(sample.map((q) => q.type));
-if (sample.length !== 5 || got.size < 4) err("deal", "en blandad femma innehåller inte alla former: " + [...got].join(","));
+if (sample.length !== 5 || got.size < 5) err("deal", "en blandad femma innehåller inte alla former: " + [...got].join(","));
 
 let roundsOk = 0;
 for (let i = 0; i < 30; i++) {

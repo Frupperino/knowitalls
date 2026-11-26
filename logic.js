@@ -7,6 +7,7 @@
     kultur: "Kultur & nöje",
     geografi: "Geografi & teknik",
     vardag: "Vardag & kluringar",
+    film: "Film, TV & memes",
   };
 
   const TYPES = {
@@ -14,6 +15,7 @@
     order: { name: "Rätt ordning", short: "Ordning", blurb: "Lägg fyra saker i rätt följd. Varje träff räknas." },
     odd: { name: "Udda fågeln", short: "Udda", blurb: "Tre hör ihop. En bara låtsas. Kopplingen avslöjas efteråt." },
     bluff: { name: "Sant eller bluff?", short: "Bluff", blurb: "En riktig kuriosa mot en snygg lögn. Välj sida." },
+    media: { name: "Bild & klipp", short: "Bild", blurb: "En stillbild eller ett kort klipp. Gissa vad du ser." },
   };
 
   const WAGERS = {
@@ -101,7 +103,7 @@
   }
 
   function isHit(type, base, correct) {
-    if (type === "odd" || type === "bluff") return !!correct;
+    if (type === "odd" || type === "bluff" || type === "media") return !!correct;
     return base >= 500;
   }
 
@@ -110,6 +112,74 @@
     let rank = RANKS[0];
     for (let i = 0; i < RANKS.length; i++) if (avg >= RANKS[i].min) rank = RANKS[i];
     return { name: rank.name, line: rank.line, avg: avg };
+  }
+
+  function gradeAnswer(q, sub, streak) {
+    const safeStreak = streak || 0;
+    const mult = multFor(safeStreak);
+    let base = 0;
+    let correct = false;
+    let title = "";
+    let tone = "bad";
+    let detail = "";
+    let penalty = 0;
+    if (!sub) {
+      title = "Inget svar";
+      detail = "Inget svar kom in den här gången.";
+    } else if (q.type === "slider") {
+      const guess = snap(q, sub.guess);
+      base = sliderScore(q, guess);
+      correct = base >= 500;
+      title = base >= 1000 && guess === q.answer ? "Mitt i prick" : base >= 1000 ? "Så gott som mitt i" : base >= 700 ? "Tätt inpå" : base >= 400 ? "I närheten" : base > 0 ? "En bit bort" : "Långt från facit";
+      tone = base >= 750 ? "good" : base >= 400 ? "mid" : "bad";
+      detail = "Du lade " + withUnit(q, guess) + ". Facit är " + withUnit(q, q.answer) + ".";
+    } else if (q.type === "order") {
+      const placed = sub.placed || [];
+      const hits = placed.filter(function (label, i) { return label === q.items[i]; }).length;
+      base = hits * 250;
+      correct = base >= 500;
+      title = hits === 4 ? "Hela raden stämmer" : hits === 3 ? "Tre på rätt plats" : hits === 2 ? "Halvvägs" : hits === 1 ? "En satt rätt" : "Ingen på rätt plats";
+      tone = hits === 4 ? "good" : hits >= 2 ? "mid" : "bad";
+      detail = hits + " av 4 satt på rätt plats.";
+    } else {
+      const w = WAGERS[sub.wager] || WAGERS.lagom;
+      if (q.type === "odd") {
+        correct = sub.selected === q.odd;
+        const picked = q.items.find(function (item) { return item.id === sub.selected; });
+        const right = q.items.find(function (item) { return item.id === q.odd; });
+        detail = correct
+          ? "Du plockade ut " + (picked ? picked.label : "rätt") + "."
+          : "Du valde " + (picked ? picked.label : "något annat") + ". Udda fågeln var " + right.label + ".";
+      } else if (q.type === "media") {
+        correct = sub.selected === q.answer;
+        const picked = q.choices.find(function (choice) { return choice.id === sub.selected; });
+        const right = q.choices.find(function (choice) { return choice.id === q.answer; });
+        detail = correct
+          ? "Du svarade " + (picked ? picked.label : "rätt") + "."
+          : "Du svarade " + (picked ? picked.label : "något annat") + ". Rätt var " + right.label + ".";
+      } else {
+        correct = (sub.selected === "sant") === !!q.answer;
+        detail = q.answer ? "Påståendet stämmer." : "Påståendet var en bluff.";
+      }
+      base = correct ? w.win : 0;
+      penalty = correct ? 0 : w.lose;
+      title = correct ? (sub.wager === "allin" ? "All-in höll" : "Rätt") : (sub.wager === "allin" ? "All-in sprack" : "Inte den här gången");
+      tone = correct ? "good" : "bad";
+    }
+    const raw = Math.round(base * mult) + penalty;
+    const hit = sub ? isHit(q.type, base, correct) : false;
+    return {
+      base: base,
+      correct: correct,
+      title: title,
+      tone: tone,
+      detail: detail,
+      penalty: penalty,
+      raw: raw,
+      mult: mult,
+      hit: hit,
+      newStreak: hit ? safeStreak + 1 : 0,
+    };
   }
 
   function trackPct(q, value) {
@@ -144,8 +214,9 @@
       return true;
     }
     if (type === "alla" && n >= 4) {
-      const types = shuffle(["slider", "order", "odd", "bluff"], rng);
-      for (let i = 0; i < types.length; i++) {
+      const types = shuffle(["slider", "order", "odd", "bluff", "media"], rng);
+      const takeTypes = n >= 5 ? types.length : 4;
+      for (let i = 0; i < takeTypes; i++) {
         const t = types[i];
         const c = bag.find((q) => q.type === t && !used.has(q.id) && !blocked(q));
         if (c) take(c);
@@ -188,5 +259,6 @@
     trackPct: trackPct,
     dealRound: dealRound,
     withUnit: withUnit,
+    gradeAnswer: gradeAnswer,
   };
 })(typeof window !== "undefined" ? window : globalThis);
