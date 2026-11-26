@@ -1,14 +1,14 @@
 {
   "name": "KnowItAlls",
   "short_name": "KnowItAlls",
-  "description": "Familjens frågesport för fjällveckan.",
+  "description": "Frågesport på svenska. Glid, sortera, hitta udda fågeln och avgör vad som är sant eller bluff.",
   "lang": "sv",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#1d1843",
-  "theme_color": "#c8372d",
+  "background_color": "#f3eadc",
+  "theme_color": "#f3eadc",
   "icons": [
     {
       "src": "icon-192.png",
